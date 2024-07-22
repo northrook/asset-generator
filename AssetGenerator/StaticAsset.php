@@ -2,12 +2,11 @@
 
 namespace Northrook\AssetGenerator;
 
-use Northrook\HTML\Element;
+use Northrook\Asset\Exception\InvalidSourceException;
 use Northrook\Resource\Path;
 use Northrook\Resource\URL;
 use function Northrook\hashKey;
 use function Northrook\isUrl;
-use function Northrook\normalizeKey;
 use function Northrook\normalizePath;
 
 abstract class StaticAsset extends Asset
@@ -27,9 +26,7 @@ abstract class StaticAsset extends Asset
         $this->generateStaticAssetFile( $source );
     }
 
-
     final public function fetchRemoteAsset() : bool {
-        dump( 'Fetchin' );
         return $this->file->save( $this->source->fetch );
     }
 
@@ -40,21 +37,23 @@ abstract class StaticAsset extends Asset
         if ( $this->source instanceof URL ) {
             $this->file = $this->getAssetPublicPath(
                 new Path(
-                    AssetContext::get()->publicAssetsDirectory . '/cached/'
-                    . $this::generateFilenameKey( $this->source ) . '.' . $this::FILETYPE,
+                    $this->publicAssets(
+                        '/cached/'
+                        . $this::generateFilenameKey( $this->source ) . '.' . $this::FILETYPE,
+                    ),
                 ),
             );
 
             if ( !$this->file->exists ) {
                 if ( !$this->source->exists ) {
-                    throw new InvalidSourceException( 'The requested source "' . $source->path . '" does not exist.' );
+                    throw new InvalidSourceException( 'The requested source "' . $this->source->path . '" does not exist.' );
                 }
                 $this->fetchRemoteAsset();
             }
         }
         else {
             if ( !$this->source->exists ) {
-                throw new InvalidSourceException( 'The requested source "' . $source->path . '" does not exist.' );
+                throw new InvalidSourceException( 'The requested source "' . $this->source->path . '" does not exist.' );
             }
             // The 'public' path
             $this->file = $this->getAssetPublicPath( $this->source );
@@ -77,7 +76,7 @@ abstract class StaticAsset extends Asset
             throw new InvalidSourceException( 'The static asset source file has not yet been set.' );
         }
 
-        $path = \substr( $this->file->path, \strlen( AssetContext::get()->publicDirectory ) );
+        $path = \substr( $this->file->path, \strlen( $this->publicRoot( ) ) );
         return '/' . \ltrim( \str_replace( '\\', '/', $path ), '/' . $this->publicAssetVersion() );
     }
 
@@ -88,10 +87,10 @@ abstract class StaticAsset extends Asset
 
     final protected function getAssetPublicPath( Path $source ) : Path {
 
-        $vendor = AssetContext::get()->projectDirectory . DIRECTORY_SEPARATOR . 'vendor';
+        $vendor = $this->projectRoot( 'vendor' );
 
         $asset = [
-            'base'      => AssetContext::get()->publicAssetsDirectory,
+            'base'      => $this->publicAssets(),
             'directory' => $this->type,
         ];
 
@@ -121,23 +120,4 @@ abstract class StaticAsset extends Asset
     }
 
 
-    /**
-     * Generate a key based on the {@see $path}.
-     *
-     * - Strips URI schema and parameters
-     *
-     * ```
-     *        |      matched     |
-     * https://unpkg.com/htmx.org?v=1720704985
-     *
-     * ```
-     *
-     * @param string  $path
-     *
-     * @return string
-     */
-    public static function generateFilenameKey( string $path ) : string {
-        $trimmed = \preg_replace( '/^(?:\w*:\/\/)*(.*?)(\?.*)?$/m', '$1', $path );
-        return normalizeKey( $trimmed ?? $path );
-    }
 }

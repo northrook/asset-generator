@@ -15,21 +15,25 @@ class Script extends StaticAsset
         array  $attributes = [],
         bool   $inline = false,
     ) {
+        $this->element = new Element( 'script', $attributes );
         parent::__construct( 'script', $source, $attributes, $inline, );
     }
 
     protected function build() : Element {
+
+        $this->element->id->add(
+            "asset-{$this->type}-" . pathinfo( $this->getPublicURL(), PATHINFO_FILENAME ),
+        );
+
         if ( $this->inline ) {
-            return new Element(
-                'script',
-                $this->attributes(),
+            $this->element->append(
                 Minify::JS( $this->file->read ),
             );
         }
+        else {
+            $this->element->set( 'src', $this->getPublicURL() );
+        }
 
-        return new Element(
-            'script',
-            $this->attributes( set : [ 'src' => $this->getPublicURL() ] ),
-        );
+        return $this->element;
     }
 }

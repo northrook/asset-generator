@@ -2,7 +2,4 @@
 
 namespace Northrook\AssetGenerator;
 
-class MappedAsset extends Asset
-{
-
-}
+class MappedAsset extends Asset { }

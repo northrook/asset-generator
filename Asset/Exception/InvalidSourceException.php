@@ -1,6 +1,6 @@
 <?php
 
-namespace Northrook\AssetGenerator;
+namespace Northrook\Asset\Exception;
 
 class InvalidSourceException extends \LogicException
 {
