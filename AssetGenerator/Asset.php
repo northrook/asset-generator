@@ -7,6 +7,7 @@ namespace Northrook\AssetGenerator;
 use Northrook\HTML\Element;
 use Northrook\Resource\Path;
 use Northrook\Resource\URL;
+use function Northrook\isUrl;
 use function Northrook\normalizeKey;
 use function Northrook\normalizePath;
 
@@ -17,8 +18,9 @@ abstract class Asset implements \Stringable
     protected Element    $element;
     protected URL | Path $source;
 
-    public readonly string $type;    // stylesheet, script, image, etc
-    public readonly string $assetID; // manual or using hashKey
+    public readonly string $type;      // stylesheet, script, image, etc
+    public readonly string $assetID;   // manual or using hashKey
+    // public readonly string $assetName; // manual or based on source path
 
     final protected function setAssetType( string $string ) : void {
         $this->type = $string;
@@ -27,6 +29,18 @@ abstract class Asset implements \Stringable
     final protected function setAssetID( string $string ) : void {
         $this->assetID = $string;
     }
+
+    final protected function setAssetSource( string $source ) : void {
+        $this->source = isUrl( $source ) ? new URL( $source ) : new Path( $source );
+    }
+
+    // final protected function setAssetName( ?string $string ) : void {
+    //     $string ??= $this->source instanceof Path
+    //         ? \substr( $this->source->path, \strlen( $this->projectRoot() ) )
+    //         : $this->source->path;
+    //     // dump( $string );
+    //     $this->assetName = normalizeKey( $string );
+    // }
 
     /**
      * Build the asset. Must return valid HTML.

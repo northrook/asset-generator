@@ -8,6 +8,7 @@ use Northrook\Resource\URL;
 use function Northrook\hashKey;
 use function Northrook\isUrl;
 use function Northrook\normalizePath;
+use function Northrook\toString;
 
 abstract class StaticAsset extends Asset
 {
@@ -16,13 +17,15 @@ abstract class StaticAsset extends Asset
     protected Path $file;
 
     public function __construct(
-        string      $type,
-        string      $source,
-        array       $attributes,
-        public bool $inline,
+        string            $type,
+        string            $source,
+        array             $attributes,
+        public bool       $inline,
+        protected ?string $assetPrefix = null,
     ) {
         $this->setAssetType( $type );
         $this->setAssetID( hashKey( [ $type, $source, ... $attributes, $inline ] ) );
+        $this->setAssetSource( $source );
         $this->generateStaticAssetFile( $source );
     }
 
@@ -44,16 +47,22 @@ abstract class StaticAsset extends Asset
                 ),
             );
 
+            dump( $this->file );
+
             if ( !$this->file->exists ) {
                 if ( !$this->source->exists ) {
-                    throw new InvalidSourceException( 'The requested source "' . $this->source->path . '" does not exist.' );
+                    throw new InvalidSourceException(
+                        'The requested source "' . $this->source->path . '" does not exist.',
+                    );
                 }
                 $this->fetchRemoteAsset();
             }
         }
         else {
             if ( !$this->source->exists ) {
-                throw new InvalidSourceException( 'The requested source "' . $this->source->path . '" does not exist.' );
+                throw new InvalidSourceException(
+                    'The requested source "' . $this->source->path . '" does not exist.',
+                );
             }
             // The 'public' path
             $this->file = $this->getAssetPublicPath( $this->source );
@@ -76,7 +85,7 @@ abstract class StaticAsset extends Asset
             throw new InvalidSourceException( 'The static asset source file has not yet been set.' );
         }
 
-        $path = \substr( $this->file->path, \strlen( $this->publicRoot( ) ) );
+        $path = \substr( $this->file->path, \strlen( $this->publicRoot() ) );
         return '/' . \ltrim( \str_replace( '\\', '/', $path ), '/' . $this->publicAssetVersion() );
     }
 
@@ -87,6 +96,7 @@ abstract class StaticAsset extends Asset
 
     final protected function getAssetPublicPath( Path $source ) : Path {
 
+        // dump($source);
         $vendor = $this->projectRoot( 'vendor' );
 
         $asset = [
@@ -109,7 +119,7 @@ abstract class StaticAsset extends Asset
             $asset[ 'bundle' ] = $bundle;
         }
 
-        $asset[ 'filename' ] = $source->basename;
+        $asset[ 'filename' ] = toString( [ $this->assetPrefix, $source->basename ], '-' );
 
         return new Path( normalizePath( $asset ) );
     }

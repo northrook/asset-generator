@@ -11,12 +11,13 @@ class Stylesheet extends StaticAsset
     protected const FILETYPE = 'css';
 
     public function __construct(
-        string $source,
-        array  $attributes = [],
-        bool   $inline = false,
+        string  $source,
+        array   $attributes = [],
+        bool    $inline = false,
+        ?string $prefix = null,
     ) {
         $this->element = new Element( 'link', $attributes );
-        parent::__construct( 'stylesheet', $source, $attributes, $inline, );
+        parent::__construct( 'stylesheet', $source, $attributes, $inline, $prefix );
     }
 
 

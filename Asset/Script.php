@@ -11,12 +11,13 @@ class Script extends StaticAsset
     protected const FILETYPE = 'js';
 
     public function __construct(
-        string $source,
-        array  $attributes = [],
-        bool   $inline = false,
+        string  $source,
+        array   $attributes = [],
+        bool    $inline = false,
+        ?string $prefix = null,
     ) {
         $this->element = new Element( 'script', $attributes );
-        parent::__construct( 'script', $source, $attributes, $inline, );
+        parent::__construct( 'script', $source, $attributes, $inline, $prefix );
     }
 
     protected function build() : Element {
