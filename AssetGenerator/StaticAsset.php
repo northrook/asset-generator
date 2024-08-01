@@ -47,8 +47,6 @@ abstract class StaticAsset extends Asset
                 ),
             );
 
-            dump( $this->file );
-
             if ( !$this->file->exists ) {
                 if ( !$this->source->exists ) {
                     throw new InvalidSourceException(

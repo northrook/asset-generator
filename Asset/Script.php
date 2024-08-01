@@ -23,7 +23,7 @@ class Script extends StaticAsset
     protected function build() : Element {
 
         $this->element->id->add(
-            "asset-{$this->type}-" . pathinfo( $this->getPublicURL(), PATHINFO_FILENAME ),
+            pathinfo( $this->getPublicURL(), PATHINFO_FILENAME ) . "-{$this->type}" ,
         );
 
         if ( $this->inline ) {
