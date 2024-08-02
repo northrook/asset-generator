@@ -4,15 +4,16 @@ declare( strict_types = 1 );
 
 namespace Northrook\AssetGenerator;
 
+use Northrook\Core\Exception\UninitializedPropertyException;
 use Northrook\HTML\Element;
-use Northrook\Resource\Path;
-use Northrook\Resource\URL;
-use function Northrook\isUrl;
-use function Northrook\normalizeKey;
-use function Northrook\normalizePath;
+use Northrook\Resource\{Path, URL};
+use function Northrook\{isUrl, normalizeKey, normalizePath};
 
 abstract class Asset implements \Stringable
 {
+    /**
+     * @var string[]
+     */
     private static array $directories;
 
     protected Element    $element;
@@ -20,6 +21,7 @@ abstract class Asset implements \Stringable
 
     public readonly string $type;      // stylesheet, script, image, etc
     public readonly string $assetID;   // manual or using hashKey
+
     // public readonly string $assetName; // manual or based on source path
 
     final protected function setAssetType( string $string ) : void {
@@ -53,24 +55,38 @@ abstract class Asset implements \Stringable
         return $this->build();
     }
 
-    final public function getHtml( bool $forceRecompile = false ) : string {
+    final public function getHtml() : string {
         return $this->build()->toString();
     }
 
     final protected function projectRoot( ?string $append = null ) : string {
-        return normalizePath( [ static::$directories[ 'projectRoot' ], $append ] );
+        return normalizePath( [ $this->getDirectory( 'projectRoot' ), $append ] );
     }
 
     final protected function projectStorage( ?string $append = null ) : string {
-        return normalizePath( [ static::$directories[ 'projectStorage' ], $append ] );
+        return normalizePath( [ $this->getDirectory( 'projectStorage' ), $append ] );
     }
 
     final protected function publicRoot( ?string $append = null ) : string {
-        return normalizePath( [ static::$directories[ 'publicRoot' ], $append ] );
+        return normalizePath( [ $this->getDirectory( 'publicRoot' ), $append ] );
     }
 
     final protected function publicAssets( ?string $append = null ) : string {
-        return normalizePath( [ static::$directories[ 'publicAssets' ], $append ] );
+        return normalizePath( [ $this->getDirectory( 'publicAssets' ), $append ] );
+    }
+
+    final protected function getDirectory( string $key ) : string {
+        if ( !isset( self::$directories ) ) {
+            throw new UninitializedPropertyException(
+                self::class . '::$directories',
+                "Asset directories have not yet been defined.
+            Please call " . self::class . '::setDirectories() earlier in the script.',
+            );
+        }
+
+        return self::$directories[ $key ] ?? throw new \UnexpectedValueException(
+            $this::class . '::$directories is missing required value for key `' . $key . '`.',
+        );
     }
 
     /**
@@ -89,7 +105,7 @@ abstract class Asset implements \Stringable
      * @return string
      */
     final public static function generateFilenameKey( string $path ) : string {
-        $trimmed = \preg_replace( '/^(?:\w*:\/\/)*(.*?)(\?.*)?$/m', '$1', $path );
+        $trimmed = \preg_replace( '/^(?:\w *:\/\/)*(.*?)( \?.*)?$/m', '$1', $path );
         return normalizeKey( $trimmed ?? $path );
     }
 
@@ -99,7 +115,7 @@ abstract class Asset implements \Stringable
         string $publicRoot,
         string $publicAssets,
     ) : void {
-        static::$directories = [
+        self::$directories ??= [
             'projectRoot'    => normalizePath( $projectRoot ),
             'projectStorage' => normalizePath( $projectStorage ),
             'publicRoot'     => normalizePath( $publicRoot ),
