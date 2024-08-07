@@ -34,7 +34,8 @@ class Stylesheet extends StaticAsset
             );
         }
         else {
-            $this->element->set( 'href', $this->getPublicURL() );
+            $this->element->set( 'href', $this->getPublicURL() )
+                          ->set( 'rel', 'stylesheet' );
         }
 
         return $this->element;
