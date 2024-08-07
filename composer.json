@@ -5,7 +5,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Northrook\\": ""
+      "Northrook\\": "src"
     }
   },
   "authors": [
@@ -24,6 +24,7 @@
     "northrook/filesystem": "dev-main"
   },
   "require-dev": {
-    "northrook/dev-env": "dev-main"
+    "northrook/dev-env": "dev-main",
+    "symfony/cache": "^7.1"
   }
 }

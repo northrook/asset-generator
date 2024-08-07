@@ -2,13 +2,13 @@
 
 namespace Northrook\Asset;
 
-use Northrook\AssetGenerator\StaticAsset;
+use Northrook\Asset\AssetGenerator\StaticAsset;
 use Northrook\HTML\Element;
 use Northrook\Minify;
 
-class Stylesheet extends StaticAsset
+class Script extends StaticAsset
 {
-    protected const FILETYPE = 'css';
+    protected const FILETYPE = 'js';
 
     public function __construct(
         string  $source,
@@ -16,10 +16,9 @@ class Stylesheet extends StaticAsset
         bool    $inline = false,
         ?string $prefix = null,
     ) {
-        $this->element = new Element( 'link', $attributes );
-        parent::__construct( 'stylesheet', $source, $attributes, $inline, $prefix );
+        $this->element = new Element( 'script', $attributes );
+        parent::__construct( 'script', $source, $attributes, $inline, $prefix );
     }
-
 
     protected function build() : Element {
 
@@ -28,14 +27,12 @@ class Stylesheet extends StaticAsset
         );
 
         if ( $this->inline ) {
-            $this->element->tag( 'style' );
             $this->element->append(
-                Minify::CSS( $this->file->read ),
+                Minify::JS( $this->file->read ),
             );
         }
         else {
-            $this->element->set( 'href', $this->getPublicURL() )
-                          ->set( 'rel', 'stylesheet' );
+            $this->element->set( 'src', $this->getPublicURL() );
         }
 
         return $this->element;
