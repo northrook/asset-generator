@@ -35,14 +35,14 @@ final class AssetManager
     }
 
     /**
-     * @param 'all'|'script'|'style'  $type
+     * @param 'all'|'script'|'stylesheet'  $type
      *
      * @return string[] of valid HTML
      */
     public function getEnqueued( string $type = 'all' ) : array {
         return match ( $type ) {
-            'script'     => $this->enqueued[ 'script' ],
-            'stylesheet' => $this->enqueued[ 'stylesheet' ],
+            'script'     => $this->enqueued[ 'script' ] ?? [],
+            'stylesheet' => $this->enqueued[ 'stylesheet' ] ?? [],
             'all'        => \array_merge( ...\array_values( $this->enqueued ) ),
             default      => []
         };
