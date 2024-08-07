@@ -11,7 +11,7 @@ use function Northrook\isUrl;
 use function Northrook\normalizeKey;
 use function Northrook\sourceKey;
 
-abstract class Asset implements \Stringable
+abstract class Asset implements AssetInterface, \Stringable
 {
     private URL | Path | string $source;
 

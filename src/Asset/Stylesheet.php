@@ -28,16 +28,21 @@ class Stylesheet extends Asset implements InlineAssetInterface
         return $this;
     }
 
+    public function getHtml() : string{
+        return $this->html = __METHOD__;
+    }
+
     public function getInlineHtml() : string {
 
         $stylesheet = $this->sourceContent();
 
         $this->attributes[ 'id' ] = ( $this->prefix ? "$this->prefix-" : '' ) . sourceKey( $this->source() );
 
-        return (string) new Element(
+        return $this->html = (string) new Element(
             tag        : 'style',
             attributes : $this->attributes,
             content    : (string) Minify::CSS( $stylesheet ),
         );
+
     }
 }

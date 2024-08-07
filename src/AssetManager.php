@@ -2,6 +2,7 @@
 
 namespace Northrook;
 
+use Northrook\Asset\Type\AssetInterface;
 use Northrook\Asset\Type\InlineAsset;
 use Northrook\Asset\Type\InlineAssetInterface;
 use Northrook\Core\Trait\SingletonClass;
@@ -13,6 +14,8 @@ use Symfony\Contracts\Cache\CacheInterface;
 final class AssetManager
 {
     use SingletonClass;
+
+    private array $enqueued = [];
 
     public readonly string $projectRoot;
     public readonly string $projectStorage;
@@ -28,15 +31,46 @@ final class AssetManager
     ) {
         $this->instantiationCheck();
 
-
         $this::$instance = $this;
     }
 
-    public function inline( InlineAssetInterface $asset, ?int $persistence = HOUR_4 ) : InlineAsset {
+    /**
+     * @param 'all'|'script'|'style'  $type
+     *
+     * @return string[] of valid HTML
+     */
+    public function getEnqueued( string $type = 'all' ) : array {
+        return match ( $type ) {
+            'script'     => $this->enqueued[ 'script' ],
+            'stylesheet' => $this->enqueued[ 'stylesheet' ],
+            'all'        => \array_merge( ...\array_values( $this->enqueued ) ),
+            default      => []
+        };
+    }
+
+    public function enqueue(
+        AssetInterface $asset,
+        ?int           $cache = HOUR_4,
+    ) : AssetManager {
+
+        $this->enqueued[ $asset->type ][ $asset->assetID ] = $asset->getHtml();
+
+        return $this;
+    }
+
+    public function inline(
+        InlineAssetInterface $asset,
+        ?int                 $cache = HOUR_4,
+    ) : AssetManager {
+
+        if ( isset( $this->enqueued[ $asset->type ][ $asset->assetID ] ) ) {
+            throw new \LogicException( "Unable to enqueue this asset. It has already been enqueued." );
+        }
+
         try {
             $inline = $this->cache?->get(
-                $asset->assetID, static function ( CacheItem $item ) use ( $asset, $persistence ) {
-                $item->expiresAfter( $persistence );
+                $asset->assetID, static function ( CacheItem $item ) use ( $asset, $cache ) {
+                $item->expiresAfter( $cache );
                 return [
                     $asset->type,
                     $asset->assetID,
@@ -54,7 +88,10 @@ final class AssetManager
             ];
         }
 
-        return new InlineAsset( ...$inline );
+
+        $this->enqueued[ $asset->type ][ $asset->assetID ] = new InlineAsset( ...$inline );
+
+        return $this;
     }
 
     public static function get() : AssetManager {
