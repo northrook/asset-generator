@@ -60,7 +60,7 @@ final class AssetManager
 
     public function inline(
         InlineAssetInterface $asset,
-        ?int                 $cache = HOUR_4,
+        bool | null | int    $cache = HOUR_4,
     ) : AssetManager {
 
         if ( isset( $this->enqueued[ $asset->type ][ $asset->assetID ] ) ) {
@@ -68,7 +68,7 @@ final class AssetManager
         }
 
         try {
-            $inline = $this->cache?->get(
+            $enqueue = ( $cache !== false ) ? $this->cache?->get(
                 $asset->assetID, static function ( CacheItem $item ) use ( $asset, $cache ) {
                 $item->expiresAfter( $cache );
                 return [
@@ -77,19 +77,19 @@ final class AssetManager
                     $asset->getInlineHtml(),
                 ];
             },
-            );
+            ) : null;
         }
         catch ( InvalidArgumentException $exception ) {
             Log::exception( $exception );
-            $inline = [
-                $asset->type,
-                $asset->assetID,
-                $asset->getInlineHtml(),
-            ];
         }
 
+        $enqueue ??= [
+            $asset->type,
+            $asset->assetID,
+            $asset->getInlineHtml(),
+        ];
 
-        $this->enqueued[ $asset->type ][ $asset->assetID ] = new InlineAsset( ...$inline );
+        $this->enqueued[ $asset->type ][ $asset->assetID ] = new InlineAsset( ...$enqueue );
 
         return $this;
     }
