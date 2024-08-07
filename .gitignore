@@ -13,7 +13,7 @@
 *.lock
 /assets/
 /cache/
-/Legacy/
+/Legacy
 /public/
 /var/
 /build/
