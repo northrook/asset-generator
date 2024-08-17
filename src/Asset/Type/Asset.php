@@ -31,7 +31,7 @@ abstract class Asset implements AssetInterface, \Stringable
     ) {
         $this->type    = normalizeKey( $type );
         $this->source  = $source;
-        $this->assetID = hashKey( $assetID ?? get_defined_vars() );
+        $this->assetID = hashKey( $assetID ?? \get_defined_vars() );
     }
 
 
@@ -78,9 +78,14 @@ abstract class Asset implements AssetInterface, \Stringable
     }
 
     final public function getId( ?string $prefix = null ) : string {
-        return $this->attributes[ 'id' ] ??= ( $prefix ? "$prefix-" : '' ) . sourceKey(
-                $this->source(), '-', 'vendor',
-            );
+        return $this->attributes[ 'id' ] ??= ( function () use ( $prefix ) {
+            $id = sourceKey( $this->source(), '-' );
+
+            if ( \str_starts_with( $id, 'vendor-' ) ) {
+                $id = \substr( $id, 7 );
+            }
+            return $prefix ? "$prefix-$id" : $id;
+        } )();
     }
 
     /**

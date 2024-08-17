@@ -1,13 +1,13 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Northrook\Asset;
 
 use Northrook\Asset\Type\Asset;
 use Northrook\Asset\Type\InlineAssetInterface;
 use Northrook\HTML\Element;
 use Northrook\Minify;
-use Symfony\Component\Filesystem\Exception\IOException;
-use function Northrook\sourceKey;
 
 class Script extends Asset implements InlineAssetInterface
 {
@@ -26,7 +26,7 @@ class Script extends Asset implements InlineAssetInterface
         return $this;
     }
 
-    public function getHtml() : string{
+    public function getHtml() : string {
         return $this->html = __METHOD__;
     }
 
@@ -34,12 +34,12 @@ class Script extends Asset implements InlineAssetInterface
 
         $script = $this->sourceContent();
 
-
+        $this->getId();
 
         return $this->html = (string) new Element(
             tag        : 'script',
             attributes : $this->attributes,
-            content    :(string) Minify::JS( $script ),
+            content    : (string) Minify::JS( $script ),
         );
     }
 }

@@ -1,17 +1,16 @@
 <?php
 
+declare( strict_types = 1 );
+
 namespace Northrook\Asset;
 
 use Northrook\Asset\Type\Asset;
 use Northrook\Asset\Type\InlineAssetInterface;
 use Northrook\HTML\Element;
 use Northrook\Minify;
-use Symfony\Component\Filesystem\Exception\IOException;
-use function Northrook\sourceKey;
 
 class Stylesheet extends Asset implements InlineAssetInterface
 {
-
     public function __construct(
         string            $source,
         protected array   $attributes = [],
@@ -36,7 +35,7 @@ class Stylesheet extends Asset implements InlineAssetInterface
 
         $stylesheet = $this->sourceContent();
 
-        $this->attributes[ 'id' ] = ( $this->prefix ? "$this->prefix-" : '' ) . sourceKey( $this->source() );
+        $this->getId();
 
         return $this->html = (string) new Element(
             tag        : 'style',
