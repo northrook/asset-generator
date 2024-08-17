@@ -3,6 +3,7 @@
 namespace Northrook\Asset\Type;
 
 use Northrook\HTML\Element;
+use Northrook\Logger\Log;
 use Northrook\Resource\Path;
 use Northrook\Resource\URL;
 use Symfony\Component\Filesystem\Exception\IOException;
@@ -10,6 +11,7 @@ use function Northrook\hashKey;
 use function Northrook\isUrl;
 use function Northrook\normalizeKey;
 use function Northrook\sourceKey;
+use const Northrook\EMPTY_STRING;
 
 abstract class Asset implements AssetInterface, \Stringable
 {
@@ -63,7 +65,8 @@ abstract class Asset implements AssetInterface, \Stringable
     final protected function sourceContent() : ?string {
 
         if ( !$this->source()->exists ) {
-            throw new IOException( 'Source is not readable.' );
+            Log::exception( new IOException( 'Source is not readable.' ) );
+            return EMPTY_STRING;
         }
 
         if ( $this->source() instanceof URL ) {
@@ -72,6 +75,12 @@ abstract class Asset implements AssetInterface, \Stringable
         else {
             return $this->source()->read;
         }
+    }
+
+    final public function getId( ?string $prefix = null ) : string {
+        return $this->attributes[ 'id' ] ??= ( $prefix ? "$prefix-" : '' ) . sourceKey(
+                $this->source(), '-', 'vendor',
+            );
     }
 
     /**

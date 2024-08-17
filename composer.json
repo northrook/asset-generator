@@ -21,7 +21,8 @@
     "northrook/core": "dev-main",
     "northrook/minify": "dev-main",
     "northrook/html-element": "dev-main",
-    "northrook/filesystem": "dev-main"
+    "northrook/filesystem": "dev-main",
+    "northrook/settings": "dev-main"
   },
   "require-dev": {
     "northrook/dev-env": "dev-main",

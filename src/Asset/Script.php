@@ -34,7 +34,7 @@ class Script extends Asset implements InlineAssetInterface
 
         $script = $this->sourceContent();
 
-        $this->attributes[ 'id' ] = ( $this->prefix ? "$this->prefix-" : '' ) . sourceKey( $this->source() );
+
 
         return $this->html = (string) new Element(
             tag        : 'script',
