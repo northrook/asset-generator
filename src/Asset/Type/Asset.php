@@ -84,6 +84,11 @@ abstract class Asset implements AssetInterface, \Stringable
             if ( \str_starts_with( $id, 'vendor-' ) ) {
                 $id = \substr( $id, 7 );
             }
+
+            $id = \str_replace( [ 'northrook-', '-src-' ], [ '', '-' ], $id );
+
+            $id = \implode( '-', \array_flip( \array_flip( explode( '-', $id ) ) ) );
+
             return $prefix ? "$prefix-$id" : $id;
         } )();
     }
