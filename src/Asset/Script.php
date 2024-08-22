@@ -8,6 +8,7 @@ use Northrook\Asset\Type\Asset;
 use Northrook\Asset\Type\InlineAssetInterface;
 use Northrook\HTML\Element;
 use Northrook\Minify;
+use const Northrook\EMPTY_STRING;
 
 class Script extends Asset implements InlineAssetInterface
 {
@@ -30,16 +31,22 @@ class Script extends Asset implements InlineAssetInterface
         return $this->html = __METHOD__;
     }
 
-    public function getInlineHtml() : string {
+    public function getInlineHtml( bool $minify = true ) : string {
+        
+        if ( !$script = $this->sourceContent() ) {
+            return EMPTY_STRING;
+        }
 
-        $script = $this->sourceContent();
+        if ( $minify ) {
+            $script = (string) Minify::JS( $script );
+        }
 
         $this->getId();
 
         return $this->html = (string) new Element(
             tag        : 'script',
             attributes : $this->attributes,
-            content    : (string) Minify::JS( $script ),
+            content    : $script,
         );
     }
 }

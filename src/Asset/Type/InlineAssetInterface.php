@@ -8,5 +8,5 @@ namespace Northrook\Asset\Type;
  */
 interface InlineAssetInterface
 {
-    public function getInlineHtml() : string;
+    public function getInlineHtml( bool $minify ) : string;
 }
