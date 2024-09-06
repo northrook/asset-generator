@@ -17,7 +17,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.3",
     "northrook/core": "dev-main",
     "northrook/minify": "dev-main",
     "northrook/html-element": "dev-main",

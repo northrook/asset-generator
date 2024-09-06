@@ -6,21 +6,21 @@ namespace Northrook\Asset;
 
 use Northrook\Asset\Type\Asset;
 use Northrook\Asset\Type\InlineAssetInterface;
+use Northrook\Filesystem\Resource;
 use Northrook\HTML\Element;
 use Northrook\Minify;
 use const Northrook\EMPTY_STRING;
 
 class Style extends Asset implements InlineAssetInterface
 {
+    protected const ?string TYPE = 'stylesheet';
+
     public function __construct(
-        string            $source,
+        string | Resource $source,
         protected array   $attributes = [],
         protected ?string $prefix = null,
     ) {
-        parent::__construct(
-            type   : 'stylesheet',
-            source : $source,
-        );
+        parent::__construct( source : $source );
     }
 
     public function build() : static {

@@ -2,11 +2,13 @@
 
 namespace Northrook\Asset\Type;
 
+use Northrook\Filesystem\Resource;
 use Northrook\HTML\Element;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
 use Northrook\Resource\URL;
 use Symfony\Component\Filesystem\Exception\IOException;
+use function Northrook\classBasename;
 use function Northrook\hashKey;
 use function Northrook\isUrl;
 use function Northrook\normalizeKey;
@@ -15,6 +17,7 @@ use const Northrook\EMPTY_STRING;
 
 abstract class Asset implements AssetInterface, \Stringable
 {
+    protected const ?string TYPE = null;
     private URL | Path | string $source;
 
     protected array $attributes = [];
@@ -25,11 +28,10 @@ abstract class Asset implements AssetInterface, \Stringable
     public readonly string $assetID;   // manual or using hashKey
 
     public function __construct(
-        string $type,
-        string $source,
-        mixed  $assetID = null,
+        string | Resource $source,
+        mixed             $assetID = null,
     ) {
-        $this->type    = normalizeKey( $type );
+        $this->type    = normalizeKey( $this::TYPE );
         $this->source  = $source;
         $this->assetID = hashKey( $assetID ?? \get_defined_vars() );
     }
@@ -53,6 +55,7 @@ abstract class Asset implements AssetInterface, \Stringable
      */
     final protected function source() : URL | Path {
 
+        // Evaluate string sources
         if ( \is_string( $this->source ) ) {
             $this->source = isUrl( $this->source )
                 ? new URL( $this->source )
@@ -65,7 +68,13 @@ abstract class Asset implements AssetInterface, \Stringable
     final protected function sourceContent() : ?string {
 
         if ( !$this->source()->exists ) {
-            Log::exception( new IOException( 'Source is not readable.' ) );
+            Log::error(
+                '{assetClass} source {sourcePath} is not readable.',
+                [
+                    'assetClass' => classBasename($this::class),
+                    'sourcePath' => $this->source()->path,
+                ],
+            );
             return EMPTY_STRING;
         }
 
