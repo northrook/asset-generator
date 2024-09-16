@@ -57,8 +57,8 @@ final class AssetResolver implements \Countable
                 $this->array[] = $this->resolveAsset( $asset );
                 continue;
             }
-
-            if ( \str_starts_with( $asset, 'dir.' ) ) {
+            
+            if ( \str_starts_with( $asset, 'dir.' ) || \str_contains( $asset, '*' ) ) {
                 $this->directoryParser( $asset );
                 continue;
             }
@@ -86,7 +86,7 @@ final class AssetResolver implements \Countable
         }
 
         if ( !$type ) {
-            Log::error( 'No assets available to merge.');
+            Log::error( 'No assets available to merge.' );
             return null;
         }
 
