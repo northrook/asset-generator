@@ -1,28 +1,25 @@
 <?php
 
-namespace Northrook\Asset\Type;
+namespace Northrook\Assets\Asset;
 
+use Northrook\Assets\Asset\Interface\Asset;
+use Northrook\Assets\AssetManager\AssetResolver;
 use Northrook\Filesystem\Resource;
-use Northrook\HTML\Element;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
 use Northrook\Resource\URL;
-use Symfony\Component\Filesystem\Exception\IOException;
 use function Northrook\classBasename;
 use function Northrook\hashKey;
 use function Northrook\isUrl;
-use function Northrook\normalizeKey;
 use function Northrook\sourceKey;
 use const Northrook\EMPTY_STRING;
 
-abstract class Asset implements AssetInterface, \Stringable
+
+abstract class AbstractAsset implements Asset
 {
-    protected const ?string TYPE = null;
     private URL | Path | string $source;
 
     protected array $attributes = [];
-
-    protected ?string $html = null;
 
     public readonly string $type;      // stylesheet, script, image, etc
     public readonly string $assetID;   // manual or using hashKey
@@ -30,22 +27,22 @@ abstract class Asset implements AssetInterface, \Stringable
     public function __construct(
         string | Resource $source,
         mixed             $assetID = null,
-    ) {
-        $this->type    = normalizeKey( $this::TYPE );
+    )
+    {
+        // dd( $source, $assetID );
+        $this->type    = $this->assetType();
         $this->source  = $source;
-        $this->assetID = hashKey( $assetID ?? \get_defined_vars() );
+        $this->assetID = $assetID ?? hashKey( \get_defined_vars() );
     }
 
+    public static function from(
+        string | array | Path | AbstractAsset $source,
+        ?string                               $id = null,
+    ) : static
+    {
+        $resolver = new AssetResolver( $source, static::class );
 
-    /**
-     * Build the asset. Must return valid HTML.
-     *
-     * @return $this
-     */
-    abstract public function build() : static;
-
-    public function __toString() : string {
-        return $this->html ??= $this->build()->html;
+        return new static( $resolver->merge()->sourceContent(), $id );
     }
 
     /**
@@ -53,8 +50,8 @@ abstract class Asset implements AssetInterface, \Stringable
      *
      * @return URL|Path
      */
-    final protected function source() : URL | Path {
-
+    final public function source() : URL | Path
+    {
         // Evaluate string sources
         if ( \is_string( $this->source ) ) {
             $this->source = isUrl( $this->source )
@@ -65,13 +62,17 @@ abstract class Asset implements AssetInterface, \Stringable
         return $this->source;
     }
 
-    final protected function sourceContent() : ?string {
+    final public function sourceContent() : ?string
+    {
+        if ( \is_string( $this->source ) ) {
+            return $this->source;
+        }
 
         if ( !$this->source()->exists ) {
             Log::error(
                 '{assetClass} source {sourcePath} is not readable.',
                 [
-                    'assetClass' => classBasename($this::class),
+                    'assetClass' => classBasename( $this::class ),
                     'sourcePath' => $this->source()->path,
                 ],
             );
@@ -86,8 +87,15 @@ abstract class Asset implements AssetInterface, \Stringable
         }
     }
 
-    final public function getId( ?string $prefix = null ) : string {
-        return $this->attributes[ 'id' ] ??= ( function () use ( $prefix ) {
+    protected function assetType() : string
+    {
+        return \strtolower( classBasename( $this::class ) );
+    }
+
+    final public function getId( ?string $prefix = null ) : string
+    {
+        return $this->attributes[ 'id' ] ??= ( function() use ( $prefix )
+        {
             $id = sourceKey( $this->source(), '-' );
 
             if ( \str_starts_with( $id, 'vendor-' ) ) {
@@ -117,7 +125,8 @@ abstract class Asset implements AssetInterface, \Stringable
      *
      * @return string
      */
-    final public static function generateFilenameKey( string $path ) : string {
+    final public static function generateFilenameKey( string $path ) : string
+    {
         $trimmed = \preg_replace(
             '/^(?:\w *:\/\/)*(.*?)( \?.*)?$/m',
             '$1',

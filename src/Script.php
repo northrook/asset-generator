@@ -2,37 +2,38 @@
 
 declare( strict_types = 1 );
 
-namespace Northrook\Asset;
+namespace Northrook\Assets;
 
-use Northrook\Asset\Type\Asset;
-use Northrook\Asset\Type\InlineAssetInterface;
+use Northrook\Assets\Asset\AbstractAsset;
+use Northrook\Assets\Asset\Interface\InlineAsset;
 use Northrook\Filesystem\Resource;
 use Northrook\HTML\Element;
 use Northrook\Minify;
 use const Northrook\EMPTY_STRING;
 
-class Script extends Asset implements InlineAssetInterface
-{
-    protected const ?string TYPE = 'script';
 
+class Script extends AbstractAsset implements InlineAsset
+{
     public function __construct(
         string | Resource $source,
+        ?string           $assetID = null,
         protected array   $attributes = [],
         protected ?string $prefix = null,
-    ) {
-        parent::__construct( source : $source );
+    )
+    {
+        parent::__construct( $source, $assetID );
+
+        $this->attributes[ 'data-asset' ] = $this->assetID;
     }
 
-    public function build() : static {
-        return $this;
+    public function getHtml() : string
+    {
+        $this->attributes[ 'link' ] = $this->source()->path;
+        return (string) new Element( 'script', $this->attributes );
     }
 
-    public function getHtml() : string {
-        return $this->html = __METHOD__;
-    }
-
-    public function getInlineHtml( bool $minify = true ) : string {
-
+    public function getInlineHtml( bool $minify = true ) : string
+    {
         if ( !$script = $this->sourceContent() ) {
             return EMPTY_STRING;
         }
@@ -41,9 +42,7 @@ class Script extends Asset implements InlineAssetInterface
             $script = (string) Minify::JS( $script );
         }
 
-        $this->getId();
-
-        return $this->html = (string) new Element(
+        return (string) new Element(
             tag        : 'script',
             attributes : $this->attributes,
             content    : $script,
