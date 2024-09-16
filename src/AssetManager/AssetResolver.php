@@ -57,7 +57,7 @@ final class AssetResolver implements \Countable
                 $this->array[] = $this->resolveAsset( $asset );
                 continue;
             }
-            
+
             if ( \str_starts_with( $asset, 'dir.' ) || \str_contains( $asset, '*' ) ) {
                 $this->directoryParser( $asset );
                 continue;
@@ -90,7 +90,7 @@ final class AssetResolver implements \Countable
             return null;
         }
 
-        $merge = \implode( ' ', $merge );
+        $merge = \implode( PHP_EOL, $merge );
 
         return new $type( $merge );
     }
@@ -148,8 +148,8 @@ final class AssetResolver implements \Countable
         }
 
         $asset = match ( $path->extension ) {
-            'css'   => new Style( $path->path ),
-            'js'    => new Script( $path->path ),
+            'css'   => new Style( $path ),
+            'js'    => new Script( $path ),
             default => null,
         };
 
