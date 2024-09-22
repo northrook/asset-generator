@@ -3,17 +3,20 @@
   "description": "An asset generator written in PHP. Creates optimised, public versions of assets from various sources.",
   "type": "library",
   "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Northrook\\Assets\\": "src"
-    }
-  },
   "authors": [
     {
       "name": "Martin",
       "email": "mn@northrook.com"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "Northrook\\Assets\\": "src"
+    }
+  },
+  "scripts": {
+    "phpstan": "vendor/bin/phpstan analyse"
+  },
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
@@ -22,10 +25,14 @@
     "northrook/minify": "dev-main",
     "northrook/html-element": "dev-main",
     "northrook/filesystem": "dev-main",
-    "northrook/settings": "dev-main"
+    "northrook/settings": "dev-main",
+    "northrook/clerk": "dev-main"
   },
   "require-dev": {
     "northrook/dev-env": "dev-main",
-    "symfony/cache": "^7.1"
+    "symfony/cache": "^7.1",
+    "phpstan/phpstan": "^1.12"
+  },
+  "config": {
   }
 }

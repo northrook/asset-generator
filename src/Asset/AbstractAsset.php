@@ -4,6 +4,7 @@ namespace Northrook\Assets\Asset;
 
 use Northrook\Assets\Asset\Interface\Asset;
 use Northrook\Assets\AssetManager\AssetResolver;
+use Northrook\Clerk;
 use Northrook\Filesystem\Resource;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
@@ -25,10 +26,11 @@ abstract class AbstractAsset implements Asset
     public readonly string $assetID;   // manual or using hashKey
 
     public function __construct(
-        string | Resource $source,
-        mixed             $assetID = null,
+            string | Resource $source,
+            mixed             $assetID = null,
     )
     {
+        Clerk::event( static::class, 'document' );
         // dd( $source, $assetID );
         $this->type    = $this->assetType();
         $this->source  = $source;
@@ -36,13 +38,21 @@ abstract class AbstractAsset implements Asset
     }
 
     public static function from(
-        string | array | Path | AbstractAsset $source,
-        ?string                               $id = null,
+            string | array | Path | AbstractAsset $source,
+            ?string                               $id = null,
     ) : static
     {
         $resolver = new AssetResolver( $source, static::class );
 
         return new static( $resolver->merge()->sourceContent(), $id );
+    }
+
+    abstract protected function getAssetHtml( bool $minify ) : string;
+
+    final public function getHtml( bool $minify = true ) : string
+    {
+        Clerk::event( static::class )->stop();
+        return $this->getAssetHtml( $minify );
     }
 
     /**
@@ -55,8 +65,8 @@ abstract class AbstractAsset implements Asset
         // Evaluate string sources
         if ( \is_string( $this->source ) ) {
             $this->source = isUrl( $this->source )
-                ? new URL( $this->source )
-                : new Path( $this->source );
+                    ? new URL( $this->source )
+                    : new Path( $this->source );
         }
 
         return $this->source;
@@ -70,11 +80,11 @@ abstract class AbstractAsset implements Asset
 
         if ( !$this->source()->exists ) {
             Log::error(
-                '{assetClass} source {sourcePath} is not readable.',
-                [
-                    'assetClass' => classBasename( $this::class ),
-                    'sourcePath' => $this->source()->path,
-                ],
+                    '{assetClass} source {sourcePath} is not readable.',
+                    [
+                            'assetClass' => classBasename( $this::class ),
+                            'sourcePath' => $this->source()->path,
+                    ],
             );
             return EMPTY_STRING;
         }
@@ -128,9 +138,9 @@ abstract class AbstractAsset implements Asset
     final public static function generateFilenameKey( string $path ) : string
     {
         $trimmed = \preg_replace(
-            '/^(?:\w *:\/\/)*(.*?)( \?.*)?$/m',
-            '$1',
-            $path,
+                '/^(?:\w *:\/\/)*(.*?)( \?.*)?$/m',
+                '$1',
+                $path,
         );
         return sourceKey( $trimmed ?? $path );
     }
