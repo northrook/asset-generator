@@ -10,7 +10,6 @@ use Northrook\HTML\Element;
 use Northrook\Minify;
 use const Northrook\EMPTY_STRING;
 
-
 class Script extends InlineAsset
 {
 
@@ -24,6 +23,7 @@ class Script extends InlineAsset
         parent::__construct( $source, $assetID );
 
         $this->attributes[ 'data-asset' ] = $this->assetID;
+        $this->attributes[ 'defer' ]      ??= 'true';
     }
 
     protected function getAssetHtml( bool $minify ) : string

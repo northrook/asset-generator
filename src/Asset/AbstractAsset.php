@@ -15,7 +15,6 @@ use function Northrook\isUrl;
 use function Northrook\sourceKey;
 use const Northrook\EMPTY_STRING;
 
-
 abstract class AbstractAsset implements Asset
 {
     private URL | Path | string $source;
@@ -40,6 +39,7 @@ abstract class AbstractAsset implements Asset
     public static function from(
             string | array | Path | AbstractAsset $source,
             ?string                               $id = null,
+            array                                 $attributes = [],
     ) : static
     {
         $resolver = new AssetResolver( $source, static::class );
