@@ -72,7 +72,7 @@ final class AssetManager
     /**
      * @param string $assetId
      *
-     * @return null|array
+     * @return array<string, array<int,string>>
      */
     public function getAssets( string $assetId ) : ?array
     {
@@ -82,7 +82,7 @@ final class AssetManager
                 'assetId' => $assetId,
                 'action'  => 'skipped',
             ] );
-            return null;
+            return [];
         }
 
         if ( ! $this->isRegistered( $assetId ) ) {
@@ -91,7 +91,7 @@ final class AssetManager
                 'assetId' => $assetId,
                 'action'  => 'skipped',
             ] );
-            return null;
+            return [];
         }
 
         return $this->getRegisteredAssets( $assetId );
