@@ -2,7 +2,7 @@
 
 namespace Northrook\Assets\AssetManager;
 
-use Northrook\Assets\Asset\AbstractAsset;
+use Northrook\Assets\Asset\AbstractAssetInterface;
 use Northrook\Assets\Script;
 use Northrook\Assets\Style;
 use Northrook\Exception\ValueError;
@@ -10,7 +10,6 @@ use Northrook\Get;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
 use Northrook\Trait\PropertyAccessor;
-
 
 /**
  * @property-read  Script[]|Style[] $assets
@@ -21,16 +20,16 @@ final class AssetResolver implements \Countable
 {
     use PropertyAccessor;
 
-
     private readonly array $source;
 
     private array $array = [];
 
     public function __construct(
-        string | array | Path | Style | Script $sources = [],
-        private readonly string                $assetClass = AbstractAsset::class,
+            string | array | Path | Style | Script $sources = [],
+            private readonly string                $assetClass = AbstractAssetInterface::class,
     )
     {
+        trigger_deprecation( 'Assets', 'dev', __METHOD__ );
         $this->source = \is_array( $sources ) ? $sources : [ $sources ];
     }
 
@@ -48,7 +47,7 @@ final class AssetResolver implements \Countable
     public function resolve() : AssetResolver
     {
         foreach ( $this->source as $asset ) {
-            if ( $asset instanceof AbstractAsset ) {
+            if ( $asset instanceof AbstractAssetInterface ) {
                 $this->array[] = $asset;
                 continue;
             }
@@ -71,7 +70,7 @@ final class AssetResolver implements \Countable
         return $this;
     }
 
-    public function merge() : ?AbstractAsset
+    public function merge() : ?AbstractAssetInterface
     {
         if ( empty( $this->array ) ) {
             $this->resolve();
@@ -155,10 +154,10 @@ final class AssetResolver implements \Countable
 
         if ( !$asset instanceof $this->assetClass ) {
             Log::notice(
-                'Invalid AbstractAsset filetype {extension} has been skipped.',
-                [
-                    'extension' => $path->extension,
-                ],
+                    'Invalid AbstractAsset filetype {extension} has been skipped.',
+                    [
+                            'extension' => $path->extension,
+                    ],
             );
             return null;
         }

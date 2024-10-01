@@ -1,12 +1,12 @@
 <?php
 
-namespace Northrook\Assets\Asset\Interface;
+namespace Northrook\Assets\Asset;
 
 /**
  * @property-read string $type
  * @property-read string $assetID
  */
-interface Asset
+interface AssetInterface
 {
     public function getHtml() : string;
 

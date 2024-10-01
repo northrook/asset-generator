@@ -1,6 +1,6 @@
 <?php
 
-declare( strict_types = 1 );
+declare(strict_types=1);
 
 namespace Northrook\Assets;
 
@@ -8,33 +8,30 @@ use Northrook\Assets\Asset\InlineAsset;
 use Northrook\Filesystem\Resource;
 use Northrook\HTML\Element;
 use Northrook\Minify;
-use const Northrook\EMPTY_STRING;
+use const Support\EMPTY_STRING;
 
 class Script extends InlineAsset
 {
-
     public function __construct(
-            string | Resource $source,
-            ?string           $assetID = null,
-            protected array   $attributes = [],
-            protected ?string $prefix = null,
-    )
-    {
+        string|Resource $source,
+        public ?string  $label = null,
+        protected array $attributes = [],
+        ?string         $assetID = null,
+    ) {
         parent::__construct( $source, $assetID );
 
-        $this->attributes[ 'data-asset' ] = $this->assetID;
-        $this->attributes[ 'defer' ]      ??= 'true';
+        $this->attributes['defer'] ??= 'true';
     }
 
     protected function getAssetHtml( bool $minify ) : string
     {
-        $this->attributes[ 'link' ] = $this->source()->path;
-        return (string) new Element( 'script', $this->attributes );
+        $this->attributes['link'] = $this->source()->path;
+        return (string) new Element( 'script', $this->attributes() );
     }
 
     protected function getInlineAssetHtml( bool $minify ) : string
     {
-        if ( !$script = $this->sourceContent() ) {
+        if ( ! $script = $this->sourceContent() ) {
             return EMPTY_STRING;
         }
 
@@ -43,9 +40,9 @@ class Script extends InlineAsset
         }
 
         return (string) new Element(
-                tag        : 'script',
-                attributes : $this->attributes,
-                content    : $script,
+            tag        : 'script',
+            attributes : $this->attributes(),
+            content    : $script,
         );
     }
 }

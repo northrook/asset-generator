@@ -11,12 +11,13 @@
 # Build data
 .env
 *.lock
-/assets/
-/cache/
+*.cache
+/assets
+/cache
 /Legacy
-/public/
-/var/
-/build/
+/public
+/var
+/build
 /index.php
 /*.html
 
