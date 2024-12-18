@@ -1,131 +1,89 @@
 <?php
 
-namespace Northrook\Assets;
+namespace Core\Assets;
 
-use Northrook\Logger\Log;
-use Support\{ClassMethods, Str};
-use Psr\Cache\InvalidArgumentException;
-use Northrook\{Settings};
-use Symfony\Component\Cache\Adapter\AdapterInterface;
-use Symfony\Component\HttpFoundation\Request;
-use const Support\EMPTY_STRING;
+// ? Intended to be extended by the Framework
+
+use Core\Assets\Factory\{AssetReference};
+use Core\Assets\Interface\{AssetHtmlInterface, AssetManagerInterface, AssetModelInterface};
+use Core\Assets\Exception\{InvalidAssetTypeException, UndefinedAssetReferenceException};
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Contracts\Cache\CacheInterface;
 
 /**
- * @author Martin Nielsen
+ * Provides the Asset Manager Service to the Framework.
+ *
+ * Get Asset:
+ * - HtmlData `get`
+ * - FactoryModel `getModel`
+ * - ManifestReference `getReference`
+ *
+ * Public access:
+ * - Locator
+ * - Factory
+ *
+ * @noinspection PhpClassCanBeReadonlyInspection
  */
-final class AssetManager
+#[Autoconfigure(
+    lazy   : true,   // lazy-load using ghost
+    public : false,  // private
+)]
+abstract class AssetManager implements AssetManagerInterface
 {
-    use ClassMethods;
-
-    /**
-     * Will look for assets ascending.
-     *
-     * @var string[]
-     */
-    protected readonly array $assetDirectories;
-
-    /**
-     * A list of currently active assets, denoted by their `assetID`.
-     *
-     * - A request with the header `HX-Assets` contain a comma separated list of deployed assets.
-     *
-     * @var string[]
-     */
-    public readonly array $deployed;
-
-    public readonly bool $enabled; // @phpstan-ignore-line
-
-    public readonly bool $inline;
-
-    public readonly bool $debug;
-
     public function __construct(
-        private readonly Request          $request,
-        private readonly AdapterInterface $cache,
+        public readonly AssetFactory        $factory, // internal
+        protected readonly ?CacheInterface  $cache = null,
+        protected readonly ?LoggerInterface $logger = null,
     ) {
-        if ( ! $this->shouldProcessRequest() ) {
-            Log::notice(
-                'The {class} is disabled, no {header} found.',
-                [
-                    'class'     => $this->classBasename(),
-                    'header'    => 'HX-Assets',
-                    'headerBag' => $this->request->headers->all(),
-                ],
+    }
+
+    final public function get(
+        string  $asset,
+        ?string $assetID = null,
+        array   $attributes = [],
+        bool    $nullable = false,
+    ) : ?AssetHtmlInterface {
+        try {
+            return $this->factory->getAssetHtml( $asset, $assetID, $attributes );
+        }
+        catch ( InvalidAssetTypeException $exception ) {
+            $this->logger?->critical(
+                $exception->getMessage(),
+                ['exception' => $exception],
             );
         }
-
-        $this->deployed = Str::explode( $this->request->headers->get( 'HX-Assets', EMPTY_STRING ) );
-        $this->inline   = (bool) ( Settings::get( 'assets.inline' ) ?? true );
-        $this->debug    = (bool) ( Settings::get( 'assets.debug' ) ?? true );
+        return $nullable ? null : throw $exception;
     }
 
-    public function shouldProcessRequest() : bool
-    {
-        // If this is an ordinary request, enable
-        if ( $this->request->headers->has( 'HX-Request' ) === false ) {
-            return $this->enabled = true; // @phpstan-ignore-line
+    final public function getModel(
+        AssetReference|string $asset,
+        ?string               $assetID = null,
+        bool                  $nullable = false,
+    ) : ?AssetModelInterface {
+        try {
+            return $this->factory->getAssetModel( $asset, $assetID );
         }
-
-        return $this->enabled = $this->request->headers->has( 'HX-Assets' ); // @phpstan-ignore-line
-    }
-
-    /**
-     * @param string $assetId
-     *
-     * @return array<string, array<int,string>>
-     */
-    public function getAssets( string $assetId ) : ?array
-    {
-
-        if ( $this->isDeployed( $assetId ) ) {
-            Log::notice( 'Asset {assetId} already deployed, {action}.', [
-                'assetId' => $assetId,
-                'action'  => 'skipped',
-            ] );
-            return [];
+        catch ( InvalidAssetTypeException $exception ) {
+            $this->logger?->critical(
+                $exception->getMessage(),
+                ['exception' => $exception],
+            );
         }
-
-        if ( ! $this->isRegistered( $assetId ) ) {
-
-            Log::notice( 'Asset {assetId} already deployed, {action}.', [
-                'assetId' => $assetId,
-                'action'  => 'skipped',
-            ] );
-            return [];
-        }
-
-        return $this->getRegisteredAssets( $assetId );
+        return $nullable ? null : throw $exception;
     }
 
-    private function isDeployed( string $assetId ) : bool
-    {
-        return \in_array( $assetId, $this->deployed, true );
-    }
-
-    private function isRegistered( string $assetId ) : bool
+    final public function getReference( string $asset, bool $nullable = false ) : ?AssetReference
     {
         try {
-            return $this->cache->hasItem( $assetId );
+            return $this->factory->resolveAssetReference( $asset );
         }
-        catch ( InvalidArgumentException $e ) {
-            return false;
+        catch ( UndefinedAssetReferenceException $exception ) {
+            $this->logger?->critical(
+                $exception->getMessage(),
+                ['exception' => $exception],
+            );
         }
-    }
-
-    /**
-     * @param string $assetId
-     *
-     * @return array
-     */
-    private function getRegisteredAssets( string $assetId ) : array
-    {
-        try {
-            $assets = $this->cache->getItem( $assetId );
-        }
-        catch ( InvalidArgumentException ) {
-            return [];
-        }
-
-        return (array) $assets->get();
+        return $nullable ? null : throw $exception;
     }
 }
