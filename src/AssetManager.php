@@ -22,8 +22,6 @@ use Symfony\Contracts\Cache\CacheInterface;
  * Public access:
  * - Locator
  * - Factory
- *
- * @noinspection PhpClassCanBeReadonlyInspection
  */
 #[Autoconfigure(
     lazy   : true,   // lazy-load using ghost

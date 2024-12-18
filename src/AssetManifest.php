@@ -79,19 +79,19 @@ class AssetManifest implements AssetManifestInterface
     }
 
     /**
-     * @param string                                                            $projectDirectory
+     * @param ?string                                                           $projectDirectory
      * @param array{0: class-string, 1: string}|callable|callable-string|string ...$functionReference
      *
      * @return void
      */
     final public function updatePhpStormMeta(
-        string                   $projectDirectory,
+        ?string                  $projectDirectory,
         array|string|callable ...$functionReference,
     ) : void {
         $meta = new PhpStormMeta( $projectDirectory );
         $meta->registerArgumentsSet(
             'asset_reference_keys',
-            \array_keys( $this->manifest->flatten() ),
+            ...\array_keys( $this->manifest->flatten() ),
         );
 
         $generateReferences = \array_merge(

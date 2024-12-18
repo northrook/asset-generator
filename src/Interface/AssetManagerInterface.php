@@ -47,7 +47,7 @@ interface AssetManagerInterface
      */
     public function getReference(
         string $asset,
-        bool   $nullable = false,
+        bool $nullable = false,
     ) : ?AssetReference;
 }
 
