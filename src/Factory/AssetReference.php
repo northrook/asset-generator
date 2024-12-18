@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Core\Assets\Factory;
 
 use Core\Assets\Factory\Asset\Type;
-use Core\Assets\Interface\AssetReferenceInterface;
 use Support\Interface\DataObject;
 use Support\Normalize;
 use Stringable;
@@ -20,8 +19,9 @@ use ValueError;
  *
  * @author Martin Nielsen
  */
-final readonly class AssetReference extends DataObject implements AssetReferenceInterface
+final readonly class AssetReference extends DataObject
 {
+    /** @var string `lower-case.dot.notated` */
     public string $name;
 
     /** @var string `relative` */

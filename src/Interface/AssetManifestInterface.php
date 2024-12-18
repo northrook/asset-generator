@@ -4,35 +4,37 @@ declare(strict_types=1);
 
 namespace Core\Assets\Interface;
 
+use Core\Assets\Factory\AssetReference;
+
 interface AssetManifestInterface
 {
     /**
-     * Check if the Manifest has a given {@see AssetReferenceInterface} by `name` or `object`.
+     * Check if the Manifest has a given {@see AssetReference} by `name` or `object`.
      *
-     * @param AssetReferenceInterface|string $asset
+     * @param AssetReference|string $asset
      *
      * @return bool
      */
-    public function has( string|AssetReferenceInterface $asset ) : bool;
+    public function has( string|AssetReference $asset ) : bool;
 
     /**
-     * Retrieve a {@see AssetReferenceInterface} by `name`.
+     * Retrieve a {@see AssetReference} by `name`.
      *
      * @param string $asset
      * @param bool   $nullable [false] throw by default
      *
-     * @return null|AssetReferenceInterface
+     * @return null|AssetReference
      */
-    public function get( string $asset, bool $nullable = false ) : ?AssetReferenceInterface;
+    public function get( string $asset, bool $nullable = false ) : ?AssetReference;
 
     /**
-     * Register a provided {@eee AssetReferenceInterface}.
+     * Register a provided {@eee \Core\Assets\Factory\AssetReference}.
      *
      * The `name` is derived from the `$reference->name`.
      *
-     * @param AssetReferenceInterface $reference
+     * @param AssetReference $reference
      *
      * @return self
      */
-    public function register( AssetReferenceInterface $reference ) : self;
+    public function register( AssetReference $reference ) : self;
 }
