@@ -11,7 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Northrook\\Assets\\": "src"
+      "Core\\Assets\\": "src"
     }
   },
   "scripts": {
@@ -21,17 +21,14 @@
   "prefer-stable": true,
   "require": {
     "php": ">=8.3",
-    "northrook/core": "dev-main",
-    "northrook/minify": "dev-main",
-    "northrook/html-element": "dev-main",
-    "northrook/filesystem": "dev-main",
-    "northrook/settings": "dev-main",
-    "northrook/clerk": "dev-main"
+    "northrook/pathfinder": "dev-main",
+    "northrook/minify": "dev-main"
   },
   "require-dev": {
+    "symfony/framework-bundle": "@stable",
+    "latte/latte": "@stable",
     "northrook/dev-env": "dev-main",
-    "symfony/cache": "^7.1",
     "phpstan/phpstan": "@stable",
-    "northrook/ui": "dev-main"
+    "northrook/settings": "dev-main"
   }
 }

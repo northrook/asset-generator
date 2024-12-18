@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory;
 
-use Core\Assets\AssetManifest;
 use Core\Assets\Factory\Asset\Type;
+use Core\Assets\Interface\AssetReferenceInterface;
 use Support\Interface\DataObject;
 use Support\Normalize;
 use Stringable;
 use ValueError;
 
 /**
- * Created by the {@see \Core\Assets\AssetFactory}, stored in the {@see AssetManifest}.
+ * Created by the {@see \Core\Assets\AssetFactory}, stored in the {@see AssetManifestInterface}.
  *
  * Can be used retrieve detailed information about the asset, or recreate it from source.
  *
@@ -20,7 +20,7 @@ use ValueError;
  *
  * @author Martin Nielsen
  */
-final readonly class AssetReference extends DataObject
+final readonly class AssetReference extends DataObject implements AssetReferenceInterface
 {
     public string $name;
 
