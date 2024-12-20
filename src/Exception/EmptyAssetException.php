@@ -1,0 +1,19 @@
+<?php
+
+namespace Core\Assets\Exception;
+
+use ValueError;
+use Throwable;
+
+final class EmptyAssetException extends ValueError
+{
+    public function __construct( string $name, ?string $assetID = null, ?Throwable $previous = null )
+    {
+        if ( $assetID ) {
+            $name .= "#{$assetID}";
+        }
+        $message = "The asset '{$name}' source is empty after compilation.";
+
+        parent::__construct( $message, 500, $previous );
+    }
+}

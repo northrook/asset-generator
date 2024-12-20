@@ -137,6 +137,22 @@ enum Type
     case ICON;
 
     /**
+     * @return string[]
+     */
+    public function extensions() : array
+    {
+        $extensions = [];
+
+        foreach ( Type::MAP as $extension => $type ) {
+            if ( $type === $this ) {
+                $extensions[] = $extension;
+            }
+        }
+
+        return $extensions;
+    }
+
+    /**
      * @param string|Type $string
      * @param bool        $throwOnInvalid
      *

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory\Compiler;
 
+use Core\Assets\Exception\EmptyAssetException;
 use Northrook\MinifierInterface;
 use Support\FileInfo;
 
@@ -19,20 +20,14 @@ trait MinifyAssetCompiler
 
     protected readonly MinifierInterface $compiler;
 
-    final protected function compile( array $addSources ) : string
+    final protected function compile() : string
     {
         $lastModified = 0;
 
-        foreach ( $addSources as $sourcePath ) {
-            $source = $this->pathfinder->getFileInfo(
-                path      : "dir.assets/{$sourcePath}",
-                assertive : true,
-            );
-
+        foreach ( $this->getReference()->getSources( true ) as $source ) {
             if ( $source->getMTime() > $lastModified ) {
                 $lastModified = $source->getMTime();
             }
-
             $this->addSource( $source );
         }
 
@@ -57,6 +52,12 @@ trait MinifyAssetCompiler
             }
         }
 
+        if ( ! $compiledString ) {
+            throw new EmptyAssetException(
+                $this->getName(),
+                $this->assetID(),
+            );
+        }
         return $compiledString;
     }
 

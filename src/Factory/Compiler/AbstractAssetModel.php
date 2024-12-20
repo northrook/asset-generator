@@ -80,7 +80,7 @@ abstract class AbstractAssetModel implements AssetModelInterface
 
     final public function getSources() : array
     {
-        return (array) $this->reference->source;
+        return $this->reference->getSources();
     }
 
     final protected function assetID() : string

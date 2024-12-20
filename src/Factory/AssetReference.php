@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Core\Assets\Factory;
 
 use Core\Assets\Factory\Asset\Type;
-use Support\Interface\DataObject;
-use Support\Normalize;
+use Support\{FileInfo, Normalize};
 use Stringable;
-use ValueError;
 
 /**
  * Created by the {@see \Core\Assets\AssetFactory}, stored in the {@see AssetManifestInterface}.
@@ -19,7 +17,7 @@ use ValueError;
  *
  * @author Martin Nielsen
  */
-final readonly class AssetReference extends DataObject
+final readonly class AssetReference
 {
     /** @var string `lower-case.dot.notated` */
     public string $name;
@@ -27,20 +25,20 @@ final readonly class AssetReference extends DataObject
     /** @var string `relative` */
     public string $publicUrl;
 
-    /** @var string|string[] `relative` */
-    public string|array $source;
+    /** @var string `file` or `directory` */
+    public string $source;
 
     /**
      * @param Type              $type
      * @param string            $name
      * @param string|Stringable $publicUrl Must be relative
-     * @param string|string[]   $source
+     * @param string|Stringable $source
      */
     public function __construct(
         public Type       $type,
         string            $name,
         string|Stringable $publicUrl,
-        string|array      $source,
+        string|Stringable $source,
     ) {
         \assert(
             \ctype_alpha( \str_replace( ['.', '-'], '', $name ) ),
@@ -65,19 +63,7 @@ final readonly class AssetReference extends DataObject
             'The public url must be relative.',
         );
 
-        foreach ( (array) $source as $assetPath ) {
-            \assert(
-                \is_string( $assetPath ),
-                $this::class.'$source must be string|string[], '.\gettype( $assetPath ).' provided.',
-            );
-
-            if ( DIRECTORY_SEPARATOR !== $assetPath[0] ) {
-                $message = $this::class.'$source must be a relative path.';
-                throw new ValueError( $message );
-            }
-        }
-
-        $this->source = $source;
+        $this->source = (string) $source;
     }
 
     /**
@@ -94,7 +80,7 @@ final readonly class AssetReference extends DataObject
     }
 
     /**
-     * @param array{type: string, name: string, publicUrl: string, source: string|string[]} $data
+     * @param array{type: string, name: string, publicUrl: string, source: string} $data
      */
     public function __unserialize( array $data ) : void
     {
@@ -102,5 +88,30 @@ final readonly class AssetReference extends DataObject
         $this->name      = $data['name'];
         $this->publicUrl = $data['publicUrl'];
         $this->source    = $data['source'];
+    }
+
+    public function getSource() : FileInfo
+    {
+        return new FileInfo( $this->source );
+    }
+
+    /**
+     * @param bool $asFileInfo
+     *
+     * @return ($asFileInfo is true ? FileInfo[] : string[])
+     */
+    public function getSources( bool $asFileInfo = false ) : array
+    {
+        $sources    = [];
+        $extensions = $this->type->extensions();
+        $source     = $this->getSource();
+        if ( $source->isDir() ) {
+            foreach ( $source->glob( '/*.*', asFileInfo : true ) as $path ) {
+                if ( \in_array( $path->getExtension(), $extensions ) ) {
+                    $sources[] = $asFileInfo ? new FileInfo( $path ) : $path->getPathname();
+                }
+            }
+        }
+        return $sources;
     }
 }

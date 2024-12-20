@@ -176,6 +176,7 @@ final class AssetLocator
             $found = \array_merge( $found, $scannedAssetFiles );
         }
 
+        dump( $found );
         return $found;
     }
 
@@ -200,13 +201,14 @@ final class AssetLocator
             ...$directory->glob( "/*.{$ext}", asFileInfo : true ),
             ...$directory->glob( '/**/', asFileInfo : true ),
         ];
+        // dump($directory);
 
         foreach ( $parse as $fileInfo ) {
             $reference = new AssetReference(
                 $type,
                 $this->generateAssetName( $fileInfo, $type ),
                 $this->relativePublicUrl( $fileInfo, $ext ),
-                $this->relativeAssetSource( $fileInfo, $ext ),
+                $this->resolveAssetSource( $fileInfo, $ext, true ),
             );
             $results[$reference->name] = $reference;
         }
@@ -242,7 +244,7 @@ final class AssetLocator
                     $type,
                     $this->generateAssetName( $splFileInfo, $type ),
                     $this->relativePublicUrl( $splFileInfo, $ext ),
-                    $this->relativeAssetSource( $splFileInfo ),
+                    $this->resolveAssetSource( $splFileInfo ),
                 );
                 $results[$reference->name] = $reference;
             }
@@ -358,11 +360,19 @@ final class AssetLocator
      *
      * @param FileInfo|string $path
      * @param ?string         $ext
+     * @param bool            $deferDiscovery
      *
      * @return string|string[]
      */
-    protected function relativeAssetSource( string|FileInfo $path, ?string $ext = null ) : string|array
-    {
+    protected function resolveAssetSource(
+        string|FileInfo $path,
+        ?string         $ext = null,
+        bool            $deferDiscovery = false,
+    ) : string|array {
+        if ( $deferDiscovery ) {
+            return $path->getPathname();
+        }
+
         if ( $path instanceof FileInfo ) {
             if ( $path->isDir() ) {
                 /** @var string[] $files */
@@ -370,7 +380,7 @@ final class AssetLocator
                 $ext ??= '*';
 
                 foreach ( $path->glob( "/*.{$ext}" ) as $file ) {
-                    $file = $this->relativeAssetSource( (string) $file );
+                    $file = $this->resolveAssetSource( (string) $file );
 
                     \assert( \is_string( $file ), 'The $path should be a string at this point.' );
 

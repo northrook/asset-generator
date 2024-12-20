@@ -17,11 +17,8 @@ final class ScriptAsset extends AbstractAssetModel
 
     public function render( ?array $attributes = null ) : AssetHtmlInterface
     {
-        $compiledJS = $this->compile( $this->getSources() );
+        $compiledJS = $this->compile();
 
-        if ( ! $compiledJS ) {
-            throw new ValueError();
-        }
 
         $attributes['asset-name'] = $this->getName();
         $attributes['asset-id']   = $this->assetID();
