@@ -21,8 +21,8 @@ abstract class AbstractAssetModel implements AssetModelInterface
     protected readonly string $publicUrl;
 
     final private function __construct(
-        private readonly AssetReference        $reference,
-        protected readonly PathfinderInterface $pathfinder,
+        private readonly AssetReference     $reference,
+        public readonly PathfinderInterface $pathfinder,
     ) {
         $this->publicPath = $pathfinder->getFileInfo( "dir.assets.public/{$reference->publicUrl}" );
         \assert( $this->publicPath instanceof FileInfo );
