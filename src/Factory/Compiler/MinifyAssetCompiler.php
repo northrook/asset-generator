@@ -15,10 +15,14 @@ use Support\FileInfo;
  */
 trait MinifyAssetCompiler
 {
+    protected bool $alwaysCompile = true;
+
     protected readonly MinifierInterface $compiler;
 
-    final protected function compile( array $addSources, int &$lastModified = 0 ) : string
+    final protected function compile( array $addSources ) : string
     {
+        $lastModified = 0;
+
         foreach ( $addSources as $sourcePath ) {
             $source = $this->pathfinder->getFileInfo(
                 path      : "dir.assets/{$sourcePath}",
@@ -36,18 +40,29 @@ trait MinifyAssetCompiler
             "dir.assets.build/{$this->publicPath->getBasename()}",
         );
 
-        if (
-            $localBuildFile->exists()
-            && ( $localBuildFile->getMTime() > $lastModified )
-        ) {
-            $compiledString = $localBuildFile->getContents();
-        }
-        else {
+        if ( $this->alwaysCompile ) {
             $compiledString = $this->compiler()->minify();
             $localBuildFile->save( $compiledString );
         }
+        else {
+            if (
+                $localBuildFile->exists()
+                && ( $localBuildFile->getMTime() > $lastModified )
+            ) {
+                $compiledString = $localBuildFile->getContents();
+            }
+            else {
+                $compiledString = $this->compiler()->minify();
+                $localBuildFile->save( $compiledString );
+            }
+        }
 
         return $compiledString;
+    }
+
+    public function alwaysCompileAsset( bool $set = true ) : void
+    {
+        $this->alwaysCompile = $set;
     }
 
     public function addSource( string|FileInfo $source ) : self

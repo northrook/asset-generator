@@ -36,7 +36,7 @@ final class ScriptAsset extends AbstractAssetModel
         else {
             $this->publicPath->save( $compiledJS );
 
-            $attributes['href'] = $this->publicUrl.$this->version();
+            $attributes['src'] = $this->publicUrl.$this->version();
 
             $html = (string) new Element( 'script', $attributes );
         }

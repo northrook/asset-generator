@@ -36,8 +36,8 @@ final class StyleAsset extends AbstractAssetModel
         else {
             $this->publicPath->save( $compiledCSS );
 
-            $attributes['rel'] = 'stylesheet';
-            $attributes['src'] = $this->publicUrl.$this->version();
+            $attributes['rel']  = 'stylesheet';
+            $attributes['href'] = $this->publicUrl.$this->version();
 
             $html = (string) new Element( 'link', $attributes );
         }
