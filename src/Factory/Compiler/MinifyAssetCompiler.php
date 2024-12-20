@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory\Compiler;
 
-use Core\Assets\Exception\EmptyAssetException;
 use Northrook\MinifierInterface;
 use Support\FileInfo;
 
@@ -16,60 +15,36 @@ use Support\FileInfo;
  */
 trait MinifyAssetCompiler
 {
-    protected bool $alwaysCompile = true;
-
     protected readonly MinifierInterface $compiler;
+
+    /** @var array{before: FileInfo[]|string[], source: FileInfo[]|string[], after: FileInfo[]|string[]} */
+    private array $sources = [
+        'before' => [],
+        'source' => [],
+        'after'  => [],
+    ];
 
     final protected function compile() : string
     {
-        $lastModified = 0;
+        $this->sources['source'] = $this->getReference()->getSources( true );
 
-        foreach ( $this->getReference()->getSources( true ) as $source ) {
-            if ( $source->getMTime() > $lastModified ) {
-                $lastModified = $source->getMTime();
-            }
-            $this->addSource( $source );
-        }
-
-        $localBuildFile = $this->pathfinder->getFileInfo(
-            "dir.assets.build/{$this->publicPath->getBasename()}",
+        $this->compiler()->addSource(
+            ...$this->sources['before'],
+            ...$this->sources['source'],
+            ...$this->sources['after'],
         );
 
-        if ( $this->alwaysCompile ) {
-            $compiledString = $this->compiler()->minify();
-            $localBuildFile->save( $compiledString );
+        return $this->compiler()->minify();
+    }
+
+    public function addSource( string|FileInfo $source, bool $before = false ) : self
+    {
+        if ( $before ) {
+            $this->sources['before'][] = $source;
         }
         else {
-            if (
-                $localBuildFile->exists()
-                && ( $localBuildFile->getMTime() > $lastModified )
-            ) {
-                $compiledString = $localBuildFile->getContents();
-            }
-            else {
-                $compiledString = $this->compiler()->minify();
-                $localBuildFile->save( $compiledString );
-            }
+            $this->sources['after'][] = $source;
         }
-
-        if ( ! $compiledString ) {
-            throw new EmptyAssetException(
-                $this->getName(),
-                $this->assetID(),
-            );
-        }
-        return $compiledString;
-    }
-
-    public function alwaysCompileAsset( bool $set = true ) : void
-    {
-        $this->alwaysCompile = $set;
-    }
-
-    public function addSource( string|FileInfo $source ) : self
-    {
-        // TODO : MinifierInterface needs to globally accept FileInfo|SplFileInfo|Stringable
-        $this->compiler()->addSource( (string) $source );
         return $this;
     }
 
