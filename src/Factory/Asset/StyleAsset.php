@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory\Asset;
 
-use Core\Assets\Factory\Compiler\{AbstractAssetModel, InlinableAsset, MinifyAssetCompiler};
+use Core\Assets\Factory\Compiler\{AbstractAssetModel, BundlableAssetInterface, InlinableAsset, BundlableAsset};
 use Core\Assets\Factory\AssetHtml;
 use Core\Assets\Interface\AssetHtmlInterface;
 use Northrook\HTML\Element;
-use ValueError;
 use Northrook\{MinifierInterface, StylesheetMinifier};
 
-final class StyleAsset extends AbstractAssetModel
+final class StyleAsset extends AbstractAssetModel implements BundlableAssetInterface
 {
-    use MinifyAssetCompiler, InlinableAsset;
+    use BundlableAsset, InlinableAsset;
 
     public function render( ?array $attributes = null ) : AssetHtmlInterface
     {
-        $compiledCSS = $this->compile();
+        $compiledCSS = ( new StylesheetMinifier(
+            $this->getSources(),
+        ) )->minify();
 
-
+        // $this->prefersInline = true;
         $attributes['asset-name'] = $this->getName();
         $attributes['asset-id']   = $this->assetID();
 

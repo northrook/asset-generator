@@ -78,7 +78,7 @@ abstract class AbstractAssetModel implements AssetModelInterface
         return $this->reference;
     }
 
-    final public function getSources() : array
+    public function getSources() : array
     {
         return $this->reference->getSources();
     }

@@ -168,9 +168,10 @@ final class AssetLocator
             // dump( [$key => $type?->name] );
 
             $scannedAssetFiles = match ( $type ) {
-                Type::STYLE, Type::SCRIPT => $this->scanDocumentAssets( $directory, $type ),
-                Type::IMAGE => $this->scanImageAssets( $directory, $type ),
-                default     => [],
+                Type::STYLE  => $this->locateStylesheetAssets( $directory, $type ),
+                Type::SCRIPT => $this->locateJavascriptAssets( $directory ),
+                Type::IMAGE  => $this->scanImageAssets( $directory, $type ),
+                default      => [],
             };
 
             $found = \array_merge( $found, $scannedAssetFiles );
@@ -182,11 +183,34 @@ final class AssetLocator
 
     /**
      * @param FileInfo $directory
+     *
+     * @return AssetReference[]
+     */
+    public function locateJavascriptAssets( FileInfo $directory ) : array
+    {
+        $type    = Type::SCRIPT;
+        $results = [];
+
+        foreach ( $directory->glob( '/*.js', asFileInfo : true ) as $fileInfo ) {
+            $reference = new AssetReference(
+                $type,
+                $this->generateAssetName( $fileInfo, $type ),
+                $this->relativePublicUrl( $fileInfo ),
+                $fileInfo->getPathname(),
+            );
+            $results[$reference->name] = $reference;
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param FileInfo $directory
      * @param Type     $type
      *
      * @return AssetReference[]
      */
-    public function scanDocumentAssets( FileInfo $directory, Type $type ) : array
+    public function locateStylesheetAssets( FileInfo $directory, Type $type ) : array
     {
         $ext = match ( $type ) {
             Type::STYLE  => 'css',
@@ -208,7 +232,7 @@ final class AssetLocator
                 $type,
                 $this->generateAssetName( $fileInfo, $type ),
                 $this->relativePublicUrl( $fileInfo, $ext ),
-                $this->resolveAssetSource( $fileInfo, $ext, true ),
+                $fileInfo->getPathname(),
             );
             $results[$reference->name] = $reference;
         }
@@ -244,7 +268,7 @@ final class AssetLocator
                     $type,
                     $this->generateAssetName( $splFileInfo, $type ),
                     $this->relativePublicUrl( $splFileInfo, $ext ),
-                    $this->resolveAssetSource( $splFileInfo ),
+                    $splFileInfo->getPathname(),
                 );
                 $results[$reference->name] = $reference;
             }
@@ -333,14 +357,15 @@ final class AssetLocator
      *
      * @internal
      *
-     * @param string $path
+     * @param FileInfo|string $path
      *
-     * @param string $ext
+     * @param ?string $ext
      *
      * @return string
      */
-    protected function relativePublicUrl( string $path, string $ext ) : string
+    protected function relativePublicUrl( string|FileInfo $path, ?string $ext = null ) : string
     {
+        $ext ??= $path->getExtension();
         $relativePath = $this->pathfinder->get( $path, 'dir.assets' );
 
         if ( ! $relativePath ) {
@@ -367,7 +392,7 @@ final class AssetLocator
     protected function resolveAssetSource(
         string|FileInfo $path,
         ?string         $ext = null,
-        bool            $deferDiscovery = false,
+        bool            $deferDiscovery = true,
     ) : string|array {
         if ( $deferDiscovery ) {
             return $path->getPathname();

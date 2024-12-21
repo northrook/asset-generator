@@ -14,6 +14,7 @@ interface AssetModelInterface
     public static function fromReference( AssetReference $reference, PathfinderInterface $pathfinder ) : self;
 
     /**
+     *
      * @template Setting of array<string, mixed>|null|bool|float|int|string|\UnitEnum
      *
      * @param ?string                     $assetID

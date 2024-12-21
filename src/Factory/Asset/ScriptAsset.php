@@ -4,21 +4,37 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory\Asset;
 
-use Core\Assets\Factory\Compiler\{AbstractAssetModel, InlinableAsset, MinifyAssetCompiler};
+use Core\Assets\Factory\Compiler\{AbstractAssetModel, BundlableAssetInterface, InlinableAsset, JavascriptAssetCompiler};
 use Core\Assets\Factory\AssetHtml;
 use Core\Assets\Interface\AssetHtmlInterface;
 use Northrook\HTML\Element;
-use Northrook\{JavaScriptMinifier, MinifierInterface};
-use ValueError;
+use Support\FileInfo;
 
-final class ScriptAsset extends AbstractAssetModel
+final class ScriptAsset extends AbstractAssetModel implements BundlableAssetInterface
 {
-    use MinifyAssetCompiler, InlinableAsset;
+    use InlinableAsset;
+
+    /** @var array{before: FileInfo[]|string[], import: FileInfo[], source: ?FileInfo, after: FileInfo[]|string[]} */
+    protected array $sources = [
+        'before' => [],
+        'import' => [],
+        'source' => null,
+        'after'  => [],
+    ];
+
+    private array $data = [];
+
+    protected function compile() : string
+    {
+        return ( new JavascriptAssetCompiler(
+            $this->getReference()->getSource(),
+        )
+        )->compile( true );
+    }
 
     public function render( ?array $attributes = null ) : AssetHtmlInterface
     {
         $compiledJS = $this->compile();
-
 
         $attributes['asset-name'] = $this->getName();
         $attributes['asset-id']   = $this->assetID();
@@ -46,13 +62,14 @@ final class ScriptAsset extends AbstractAssetModel
         );
     }
 
-    /**
-     * @param null|MinifierInterface $compiler
-     *
-     * @return MinifierInterface
-     */
-    protected function compiler( ?MinifierInterface $compiler = null ) : MinifierInterface
+    final public function addSource( string|FileInfo $source, bool $before = false ) : self
     {
-        return $this->compiler ??= $compiler ?? new JavaScriptMinifier( [] );
+        if ( $before ) {
+            $this->sources['before'][] = $source;
+        }
+        else {
+            $this->sources['after'][] = $source;
+        }
+        return $this;
     }
 }

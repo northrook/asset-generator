@@ -111,6 +111,8 @@ final readonly class AssetReference
                     $sources[] = $asFileInfo ? new FileInfo( $path ) : $path->getPathname();
                 }
             }
+        } else {
+            $sources[] = $source;
         }
         return $sources;
     }
