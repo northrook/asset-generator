@@ -37,6 +37,7 @@ final class AssetLocator
         DIR_VIDEOS    = 'dir.assets/videos',
         DIR_DOCUMENTS = 'dir.assets/documents';
 
+    // Flip these, so the key is the parameterKey, and value is name
     /** @var array<string, string> */
     private array $assetDirectories = [
         'root'     => self::DIR_ASSETS,

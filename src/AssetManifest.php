@@ -9,7 +9,7 @@ use Core\Assets\Interface\{AssetManagerInterface, AssetManifestInterface};
 use Core\Assets\Factory\AssetReference;
 use Northrook\ArrayStore;
 use Psr\Log\LoggerInterface;
-use Support\{PhpStormMeta};
+use Support\PhpStormMeta;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
 /**
