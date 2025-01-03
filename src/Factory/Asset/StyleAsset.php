@@ -7,7 +7,7 @@ namespace Core\Assets\Factory\Asset;
 use Core\Assets\Factory\Compiler\{AbstractAssetModel, BundlableAssetInterface, InlinableAsset, BundlableAsset};
 use Core\Assets\Factory\AssetHtml;
 use Core\Assets\Interface\AssetHtmlInterface;
-use Northrook\HTML\Element;
+use Core\View\Html\Element;
 use Northrook\{MinifierInterface, StylesheetMinifier};
 
 final class StyleAsset extends AbstractAssetModel implements BundlableAssetInterface
