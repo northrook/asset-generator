@@ -58,8 +58,7 @@ final class AssetLocator
         private readonly AssetManifestInterface $manifest,
         private readonly PathfinderInterface    $pathfinder,
         private readonly ?LoggerInterface       $logger = null,
-    ) {
-    }
+    ) {}
 
     /**
      * # ✅
@@ -178,7 +177,7 @@ final class AssetLocator
             $found = \array_merge( $found, $scannedAssetFiles );
         }
 
-        dump( $found );
+        // dump( $found );
         return $found;
     }
 

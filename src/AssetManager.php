@@ -35,8 +35,7 @@ abstract class AssetManager implements AssetManagerInterface
         public readonly AssetFactory        $factory, // internal
         protected readonly ?CacheInterface  $cache = null,
         protected readonly ?LoggerInterface $logger = null,
-    ) {
-    }
+    ) {}
 
     final public function get(
         string  $asset,
