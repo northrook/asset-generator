@@ -25,8 +25,7 @@ final readonly class AssetHtml extends DataObject implements AssetHtmlInterface
         private string $assetID,
         private Type   $type,
         private string $html,
-    ) {
-    }
+    ) {}
 
     /**
      * Returns fully resolved `HTML` of the asset.

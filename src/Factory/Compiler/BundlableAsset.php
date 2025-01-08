@@ -15,7 +15,6 @@ trait BundlableAsset
         'after'  => [],
     ];
 
-
     final public function getSources() : array
     {
         $this->sources['source'] = $this->getReference()->getSources( true );

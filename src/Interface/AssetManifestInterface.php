@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Core\Assets\Interface;
 
-use Core\Assets\Factory\AssetReference;
+use Core\Assets\Exception\UndefinedAssetReferenceException;
+use Core\Assets\Factory\Compiler\AssetReference;
 
 interface AssetManifestInterface
 {
@@ -15,17 +16,18 @@ interface AssetManifestInterface
      *
      * @return bool
      */
-    public function has( string|AssetReference $asset ) : bool;
+    public function hasReference( string|AssetReference $asset ) : bool;
 
     /**
      * Retrieve a {@see AssetReference} by `name`.
      *
-     * @param string $asset
-     * @param bool   $nullable [false] throw by default
+     * @param string                     $asset
+     * @param ?callable():AssetReference $register
      *
-     * @return null|AssetReference
+     * @return AssetReference
+     * @throws UndefinedAssetReferenceException
      */
-    public function get( string $asset, bool $nullable = false ) : ?AssetReference;
+    public function getReference( string $asset, ?callable $register = null ) : AssetReference;
 
     /**
      * Register a provided {@eee \Core\Assets\Factory\AssetReference}.
@@ -36,5 +38,7 @@ interface AssetManifestInterface
      *
      * @return self
      */
-    public function register( AssetReference $reference ) : self;
+    public function registerReference( AssetReference $reference ) : self;
+
+    public function commit() : void;
 }

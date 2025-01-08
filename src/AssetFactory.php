@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace Core\Assets;
 
-// ? Replaces AssetManager
-
+use Core\Assets\Factory\Compiler\AssetReference;
+use Core\Assets\Exception\{InvalidAssetTypeException, UndefinedAssetReferenceException};
+use Core\Assets\Factory\Asset\{ImageAsset, ScriptAsset, StyleAsset, Type};
+use Core\Assets\Factory\AssetLocator;
 use Core\Assets\Interface\{AssetHtmlInterface, AssetManifestInterface, AssetModelInterface};
-use Core\Assets\Exception\UndefinedAssetReferenceException;
-use Core\Assets\Factory\Asset\Type;
-use Core\Assets\Factory\{AssetLocator, AssetReference, Asset\ImageAsset, Asset\ScriptAsset, Asset\StyleAsset};
-use Core\{Assets\Exception\InvalidAssetTypeException, PathfinderInterface, SettingsInterface};
+use Core\PathfinderInterface;
+use Core\Symfony\DependencyInjection\Autodiscover;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-#[Autoconfigure(
-    lazy     : true,   // lazy-load using ghost
-    public   : false,  // private
-    autowire : false,  // manual injection only
+#[Autodiscover(
+    lazy   : true,   // lazy-load using ghost
+    public : false,  // private
 )]
 class AssetFactory
 {
@@ -31,13 +29,11 @@ class AssetFactory
     protected array $assetTypeCallback = [];
 
     final public function __construct(
-        protected readonly AssetManifestInterface $manifest,
-        protected readonly PathfinderInterface    $pathfinder,
-        protected readonly ?SettingsInterface     $settings = null,
-        protected readonly ?LoggerInterface       $logger = null,
-        protected bool                            $lock = false,
-    ) {
-    }
+        public readonly AssetManifestInterface $manifest,
+        protected readonly PathfinderInterface $pathfinder,
+        protected readonly ?LoggerInterface    $logger = null,
+        protected bool                         $lock = false,
+    ) {}
 
     final public function locator() : AssetLocator
     {
@@ -69,17 +65,18 @@ class AssetFactory
     }
 
     /**
-     * @param string                                    $asset
+     * @param AssetReference|string                     $asset
      * @param ?string                                   $assetID
      * @param array<string, null|bool|float|int|string> $attributes
      *
      * @return AssetHtmlInterface
      * @throws InvalidAssetTypeException
+     * @throws UndefinedAssetReferenceException
      */
     final public function getAssetHtml(
-        string  $asset,
-        ?string $assetID = null,
-        array   $attributes = [],
+        AssetReference|string $asset,
+        ?string               $assetID = null,
+        array                 $attributes = [],
     ) : AssetHtmlInterface {
         $assetModel = $this->getAssetModel( $asset, $assetID );
 
@@ -94,7 +91,7 @@ class AssetFactory
      *
      * @return AssetModelInterface
      *
-     * @throws InvalidAssetTypeException on failure
+     * @throws InvalidAssetTypeException|UndefinedAssetReferenceException on failure
      */
     final public function getAssetModel(
         string|AssetReference $asset,
@@ -118,7 +115,7 @@ class AssetFactory
             $this->pathfinder,
         );
 
-        $asset->build( $assetID, $this->settings );
+        $asset->build( $assetID );
 
         return $asset;
     }
@@ -138,10 +135,11 @@ class AssetFactory
         }
 
         try {
-            $asset = $this->manifest->get( $asset );
+            return $this->manifest->getReference( $asset );
         }
         catch ( UndefinedAssetReferenceException $exception ) {
             $validType = Type::from( \strstr( $asset, '.', true ) ?: $asset );
+
             if ( $validType ) {
                 $this->logger?->warning(
                     'Unable to resolve asset model for {asset} with type {type}. Autodiscover triggered.',
@@ -159,10 +157,8 @@ class AssetFactory
                 );
                 throw $exception;
             }
-            $asset = $this->manifest->get( $asset, true );
+            return $this->manifest->getReference( $asset );
         }
-
-        return $asset;
     }
 
     /**

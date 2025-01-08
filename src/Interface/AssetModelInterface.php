@@ -5,26 +5,25 @@ declare(strict_types=1);
 namespace Core\Assets\Interface;
 
 use Core\Assets\Factory\Asset\Type;
-use Core\Assets\Factory\AssetReference;
-use Core\{PathfinderInterface, SettingsInterface};
+use Core\Assets\Factory\Compiler\AssetReference;
+use Core\PathfinderInterface;
 use RuntimeException;
 
 interface AssetModelInterface
 {
-    public static function fromReference( AssetReference $reference, PathfinderInterface $pathfinder ) : self;
+    public static function fromReference(
+        AssetReference      $reference,
+        PathfinderInterface $pathfinder,
+    ) : self;
 
     /**
-     *
-     * @template Setting of array<string, mixed>|null|bool|float|int|string|\UnitEnum
-     *
-     * @param ?string                     $assetID
-     * @param ?SettingsInterface<Setting> $settings
+     * @param ?string $assetID
      *
      * @return self
      *
      * @throws RuntimeException
      */
-    public function build( ?string $assetID = null, ?SettingsInterface $settings = null ) : self;
+    public function build( ?string $assetID = null ) : self;
 
     public function getName() : string; // {type}.{name}.{dir|variant}
 
@@ -37,7 +36,7 @@ interface AssetModelInterface
 
     public function getType() : Type;
 
-    public function getReference() : ?AssetReference;
+    public function getReference() : AssetReference;
 
     /**
      * @param null|array<string, null|bool|float|int|string> $attributes

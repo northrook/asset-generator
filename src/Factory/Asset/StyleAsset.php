@@ -24,6 +24,8 @@ final class StyleAsset extends AbstractAssetModel implements BundlableAssetInter
         $attributes['asset-name'] = $this->getName();
         $attributes['asset-id']   = $this->assetID();
 
+        $this->publicPath->save( $compiledCSS );
+
         if ( $this->prefersInline ) {
             $html = (string) new Element(
                 tag        : 'style',
@@ -32,8 +34,6 @@ final class StyleAsset extends AbstractAssetModel implements BundlableAssetInter
             );
         }
         else {
-            $this->publicPath->save( $compiledCSS );
-
             $attributes['rel']  = 'stylesheet';
             $attributes['href'] = $this->publicUrl.$this->version();
 

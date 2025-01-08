@@ -2,7 +2,7 @@
 
 namespace Core\Assets\Factory;
 
-use Core\Assets\AssetManifest;
+use Core\Assets\{AssetManifest, Factory\Compiler\AssetReference};
 use Core\Assets\Exception\InvalidAssetTypeException;
 use Core\Assets\Factory\Asset\Type;
 use Core\Assets\Interface\AssetManifestInterface;
@@ -14,7 +14,7 @@ use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 
 /**
- * Locates `assets`, registering each as an {@see AssetReference} in the {@see AssetManifest}.
+ * Locates `assets`, registering each as an {@see AssetReference} in the {@see Manifest}.
  *
  * Does **not**:
  * - Generate asset files
@@ -59,6 +59,11 @@ final class AssetLocator
         private readonly PathfinderInterface    $pathfinder,
         private readonly ?LoggerInterface       $logger = null,
     ) {}
+
+    final public function updateManifest() : void
+    {
+        $this->manifest->commit();
+    }
 
     /**
      * # ✅
@@ -127,12 +132,13 @@ final class AssetLocator
     final public function discover( string|Type ...$scan ) : self
     {
         foreach ( $this->scan( ...$scan ) as $reference ) {
-            $this->manifest->register( $reference );
+            $this->manifest->registerReference( $reference );
         }
 
         if ( $this->manifest instanceof AssetManifest ) {
             $this->manifest->updatePhpStormMeta( $this->pathfinder->get( 'dir.root' ) );
         }
+
         return $this;
     }
 
@@ -365,6 +371,9 @@ final class AssetLocator
      */
     protected function relativePublicUrl( string|FileInfo $path, ?string $ext = null ) : string
     {
+        if ( \is_string( $path ) ) {
+            $path = new FileInfo( $path );
+        }
         $ext ??= $path->getExtension();
         $relativePath = $this->pathfinder->get( $path, 'dir.assets' );
 
@@ -395,7 +404,7 @@ final class AssetLocator
         bool            $deferDiscovery = true,
     ) : string|array {
         if ( $deferDiscovery ) {
-            return $path->getPathname();
+            return (string) $path;
         }
 
         if ( $path instanceof FileInfo ) {

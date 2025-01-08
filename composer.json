@@ -23,7 +23,9 @@
     "php": ">=8.3",
     "northrook/pathfinder": "dev-main",
     "northrook/minify": "dev-main",
-    "northrook/view": "dev-main"
+    "northrook/cache": "dev-main",
+    "northrook/view": "dev-main",
+    "northrook/storage": "dev-main"
   },
   "require-dev": {
     "symfony/framework-bundle": "@stable",

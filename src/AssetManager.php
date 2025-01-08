@@ -6,11 +6,11 @@ namespace Core\Assets;
 
 // ? Intended to be extended by the Framework
 
-use Core\Assets\Factory\{AssetReference};
+use Core\Assets\Factory\Compiler\AssetReference;
 use Core\Assets\Interface\{AssetHtmlInterface, AssetManagerInterface, AssetModelInterface};
+use Core\Symfony\DependencyInjection\Autodiscover;
 use Core\Assets\Exception\{InvalidAssetTypeException, UndefinedAssetReferenceException};
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
@@ -24,12 +24,14 @@ use Symfony\Contracts\Cache\CacheInterface;
  * Public access:
  * - Locator
  * - Factory
+ *
+ * @noinspection PhpClassCanBeReadonlyInspection
  */
-#[Autoconfigure(
+#[Autodiscover(
     lazy   : true,   // lazy-load using ghost
     public : false,  // private
 )]
-abstract class AssetManager implements AssetManagerInterface
+class AssetManager implements AssetManagerInterface
 {
     public function __construct(
         public readonly AssetFactory        $factory, // internal
@@ -37,42 +39,40 @@ abstract class AssetManager implements AssetManagerInterface
         protected readonly ?LoggerInterface $logger = null,
     ) {}
 
-    final public function get(
-        string  $asset,
-        ?string $assetID = null,
-        array   $attributes = [],
-        bool    $nullable = false,
+    final public function getAssetHtml(
+        AssetReference|string $asset,
+        ?string               $assetID = null,
+        array                 $attributes = [],
     ) : ?AssetHtmlInterface {
         try {
             return $this->factory->getAssetHtml( $asset, $assetID, $attributes );
         }
-        catch ( InvalidAssetTypeException $exception ) {
+        catch ( InvalidAssetTypeException|UndefinedAssetReferenceException $exception ) {
             $this->logger?->critical(
                 $exception->getMessage(),
                 ['exception' => $exception],
             );
         }
-        return $nullable ? null : throw $exception;
+        return null;
     }
 
-    final public function getModel(
+    final public function getAssetModel(
         AssetReference|string $asset,
         ?string               $assetID = null,
-        bool                  $nullable = false,
     ) : ?AssetModelInterface {
         try {
             return $this->factory->getAssetModel( $asset, $assetID );
         }
-        catch ( InvalidAssetTypeException $exception ) {
+        catch ( InvalidAssetTypeException|UndefinedAssetReferenceException $exception ) {
             $this->logger?->critical(
                 $exception->getMessage(),
                 ['exception' => $exception],
             );
         }
-        return $nullable ? null : throw $exception;
+        return null;
     }
 
-    final public function getReference( string $asset, bool $nullable = false ) : ?AssetReference
+    final public function getReference( string $asset ) : ?AssetReference
     {
         try {
             return $this->factory->resolveAssetReference( $asset );
@@ -83,6 +83,6 @@ abstract class AssetManager implements AssetManagerInterface
                 ['exception' => $exception],
             );
         }
-        return $nullable ? null : throw $exception;
+        return null;
     }
 }

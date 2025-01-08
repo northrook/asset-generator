@@ -4,78 +4,70 @@ declare(strict_types=1);
 
 namespace Core\Assets;
 
+use Northrook\LocalStorage;
 use Core\Assets\Exception\UndefinedAssetReferenceException;
+use Core\Assets\Factory\Compiler\AssetReference;
 use Core\Assets\Interface\{AssetManagerInterface, AssetManifestInterface};
-use Core\Assets\Factory\AssetReference;
-use Northrook\ArrayStore;
+use Core\Symfony\DependencyInjection\Autodiscover;
 use Psr\Log\LoggerInterface;
 use Support\PhpStormMeta;
-use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/**
- * @noinspection PhpClassCanBeReadonlyInspection
- */
-#[Autoconfigure(
-    lazy     : true,   // lazy-load using ghost
-    public   : false,  // private
-    autowire : false,  // manual injection only
+#[Autodiscover(
+    lazy   : true,   // lazy-load using ghost
+    public : false,  // private
 )]
 class AssetManifest implements AssetManifestInterface
 {
-    /** @var ArrayStore<string, string> */
-    private readonly ArrayStore $manifest;
+    protected readonly LocalStorage $storage;
 
-    final public function __construct(
-        string           $storagePath,
-        ?LoggerInterface $logger = null,
-        string           $name = 'AssetManifest',
-        bool             $readonly = false,
-        bool             $autosave = true,
+    public function __construct(
+        #[Autowire( param : 'path.asset_manifest' )] //
+        string                    $storagePath,
+        protected LoggerInterface $logger,
     ) {
-        $this->manifest = new ArrayStore( $storagePath, $name, $readonly, $autosave, $logger );
-
-        if ( ! \file_exists( $storagePath ) ) {
-            $this->manifest->save();
-        }
+        $this->storage = new LocalStorage(
+            $storagePath,
+            autosave : false,
+        );
     }
 
-    final public function has( AssetReference|string $asset ) : bool
+    public function hasReference( AssetReference|string $asset ) : bool
     {
         if ( $asset instanceof AssetReference ) {
             $asset = $asset->name;
         }
-        return $this->manifest->has( $asset );
+
+        return $this->storage->has( $asset );
     }
 
-    /**
-     * @param string $asset
-     * @param bool   $nullable [false] throw by default
-     *
-     * @return ($nullable is true ? null|AssetReference : AssetReference)
-     */
-    final public function get( string $asset, bool $nullable = false ) : ?AssetReference
+    public function getReference( string $asset, ?callable $register = null ) : AssetReference
     {
-        $reference = $this->manifest->get( $asset );
+        $reference = $this->storage->get( $asset, $register );
 
         if ( ! $reference ) {
-            if ( $nullable ) {
-                return null;
-            }
-            throw new UndefinedAssetReferenceException( $asset, \array_keys( $this->manifest->flatten() ) );
+            throw new UndefinedAssetReferenceException( $asset, $this->storage->getKeys() );
         }
 
-        return \unserialize( $reference );
+        return $reference;
     }
 
-    /**
-     * @param AssetReference $reference
-     *
-     * @return $this
-     */
-    final public function register( AssetReference $reference ) : self
+    public function registerReference( AssetReference $reference ) : AssetManifestInterface
     {
-        $this->manifest->set( $reference->name, \serialize( $reference ) );
+        $this->storage->set( $reference->name, $reference );
         return $this;
+    }
+
+    public function hasChanges() : bool
+    {
+        return $this->storage->hasChanges();
+    }
+
+    public function commit() : void
+    {
+        $status = $this->storage->save();
+
+        $this->logger->info( '{method} {status}', ['method' => __METHOD__, 'status' => $status] );
     }
 
     /**
@@ -89,17 +81,18 @@ class AssetManifest implements AssetManifestInterface
         array|string|callable ...$functionReference,
     ) : void {
         $meta = new PhpStormMeta( $projectDirectory );
+
         $meta->registerArgumentsSet(
             'asset_reference_keys',
-            ...\array_keys( $this->manifest->flatten() ),
+            ...\array_keys( $this->storage->getKeys() ),
         );
 
         $generateReferences = \array_merge(
             [
-                [AssetManifestInterface::class, 'has'],
-                [AssetManifestInterface::class, 'get'],
-                [AssetManagerInterface::class, 'get'],
-                [AssetManagerInterface::class, 'getModel'],
+                [AssetManifestInterface::class, 'hasReference'],
+                [AssetManifestInterface::class, 'getReference'],
+                [AssetManagerInterface::class, 'getAssetHtml'],
+                [AssetManagerInterface::class, 'getAssetModel'],
                 [AssetManagerInterface::class, 'getReference'],
             ],
             $functionReference,

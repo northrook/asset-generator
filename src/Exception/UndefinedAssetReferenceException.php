@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Core\Assets\Exception;
 
-use InvalidArgumentException;
 use JetBrains\PhpStorm\Pure;
 use Throwable;
 use const HTTP\FAILED_DEPENDENCY_424;
+use Exception;
 
 /**
  * @TODO Add `$didYouMean` support.
  */
-final class UndefinedAssetReferenceException extends InvalidArgumentException
+final class UndefinedAssetReferenceException extends Exception
 {
     /**
      * @param string         $key

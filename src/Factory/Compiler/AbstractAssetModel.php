@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Core\Assets\Factory\Compiler;
 
-use Core\Assets\Factory\{AssetReference, Asset\Type};
+use Core\Assets\Factory\Asset\Type;
 use Core\Assets\Interface\AssetModelInterface;
-use Core\{PathfinderInterface, SettingsInterface};
+use Core\PathfinderInterface;
 use Support\{FileInfo, Normalize};
 use function String\hashKey;
 use const Support\AUTO;
@@ -29,7 +29,7 @@ abstract class AbstractAssetModel implements AssetModelInterface
         $this->publicUrl = Normalize::url( $this->pathfinder->get( $this->publicPath, 'dir.public' ) );
     }
 
-    public function build( ?string $assetID = null, ?SettingsInterface $settings = null ) : AssetModelInterface
+    public function build( ?string $assetID = null ) : AssetModelInterface
     {
         $this->setAssetID( $assetID );
         return $this;
@@ -69,7 +69,11 @@ abstract class AbstractAssetModel implements AssetModelInterface
     final public function getPublicPath( bool $relative = false ) : string
     {
         return $relative
-                ? $this->pathfinder->get( (string) $this->publicPath, 'dir.public', true )
+                ? $this->pathfinder->get(
+                    (string) $this->publicPath,
+                    'dir.public',
+                    true,
+                )
                 : (string) $this->publicPath;
     }
 
@@ -100,7 +104,7 @@ abstract class AbstractAssetModel implements AssetModelInterface
                 $this::class,
                 $this->reference->name,
                 $this->reference->type->name,
-                ...(array) $this->reference->source,
+                ...$this->reference->getSources(),
             ],
             'implode',
         );

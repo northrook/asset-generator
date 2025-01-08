@@ -8,6 +8,7 @@ use Core\Assets\Factory\Compiler\{AbstractAssetModel, BundlableAssetInterface, I
 use Core\Assets\Factory\AssetHtml;
 use Core\Assets\Interface\AssetHtmlInterface;
 use Core\View\Html\Element;
+use Northrook\JavaScriptMinifier;
 use Support\FileInfo;
 
 final class ScriptAsset extends AbstractAssetModel implements BundlableAssetInterface
@@ -26,10 +27,12 @@ final class ScriptAsset extends AbstractAssetModel implements BundlableAssetInte
 
     protected function compile() : string
     {
-        return ( new JavascriptAssetCompiler(
-            $this->getReference()->getSource(),
-        )
-        )->compile( true );
+        $sources = [];
+
+        foreach ( $this->getReference()->getSources() as $source ) {
+            $sources[] = ( new JavascriptAssetCompiler( $source ) )->compile();
+        }
+        return ( new JavaScriptMinifier( $sources ) )->minify();
     }
 
     public function render( ?array $attributes = null ) : AssetHtmlInterface
@@ -38,6 +41,8 @@ final class ScriptAsset extends AbstractAssetModel implements BundlableAssetInte
 
         $attributes['asset-name'] = $this->getName();
         $attributes['asset-id']   = $this->assetID();
+
+        $this->publicPath->save( $compiledJS );
 
         if ( $this->prefersInline ) {
             $html = (string) new Element(
