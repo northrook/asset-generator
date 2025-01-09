@@ -15,8 +15,9 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 #[Autodiscover(
-    lazy   : true,   // lazy-load using ghost
-    public : false,  // private
+    lazy     : true,
+    public   : false,
+    autowire : true,
 )]
 class AssetFactory
 {
