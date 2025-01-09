@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Core\Assets;
 
-use Northrook\LocalStorage;
+use Cache\LocalStorage;
 use Core\Assets\Exception\UndefinedAssetReferenceException;
 use Core\Assets\Factory\Compiler\AssetReference;
 use Core\Assets\Interface\{AssetManagerInterface, AssetManifestInterface};

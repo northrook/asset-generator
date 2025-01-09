@@ -24,8 +24,7 @@
     "northrook/pathfinder": "dev-main",
     "northrook/minify": "dev-main",
     "northrook/cache": "dev-main",
-    "northrook/view": "dev-main",
-    "northrook/storage": "dev-main"
+    "northrook/view": "dev-main"
   },
   "require-dev": {
     "symfony/framework-bundle": "@stable",
