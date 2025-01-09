@@ -40,5 +40,5 @@ interface AssetManifestInterface
      */
     public function registerReference( AssetReference $reference ) : self;
 
-    public function commit() : void;
+    public function commit() : bool;
 }

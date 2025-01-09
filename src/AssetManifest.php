@@ -9,7 +9,6 @@ use Core\Assets\Exception\UndefinedAssetReferenceException;
 use Core\Assets\Factory\Compiler\AssetReference;
 use Core\Assets\Interface\{AssetManagerInterface, AssetManifestInterface};
 use Core\Symfony\DependencyInjection\Autodiscover;
-use Psr\Log\LoggerInterface;
 use Support\PhpStormMeta;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -26,17 +25,18 @@ class AssetManifest implements AssetManifestInterface
     protected readonly LocalStorage $storage;
 
     public function __construct(
-        #[Autowire( param : 'path.asset_manifest' )] //
-        string                             $storagePath,
-        protected readonly LoggerInterface $logger,
+        #[Autowire( param : 'path.asset_manifest' )] string $storagePath,
     ) {
         $this->storage = new LocalStorage(
-            $storagePath,
-            autosave : false,
+            filePath  : $storagePath,
+            name      : 'asset_manifest',
+            generator : $this::class,
+            autosave  : false,
+            validate  : true,
         );
     }
 
-    public function hasReference( AssetReference|string $asset ) : bool
+    final public function hasReference( AssetReference|string $asset ) : bool
     {
         if ( $asset instanceof AssetReference ) {
             $asset = $asset->name;
@@ -45,7 +45,7 @@ class AssetManifest implements AssetManifestInterface
         return $this->storage->has( $asset );
     }
 
-    public function getReference( string $asset, ?callable $register = null ) : AssetReference
+    final public function getReference( string $asset, ?callable $register = null ) : AssetReference
     {
         $reference = $this->storage->get( $asset, $register );
 
@@ -56,22 +56,20 @@ class AssetManifest implements AssetManifestInterface
         return $reference;
     }
 
-    public function registerReference( AssetReference $reference ) : AssetManifestInterface
+    final public function registerReference( AssetReference $reference ) : AssetManifestInterface
     {
         $this->storage->set( $reference->name, $reference );
         return $this;
     }
 
-    public function hasChanges() : bool
+    final public function hasChanges() : bool
     {
         return $this->storage->hasChanges();
     }
 
-    public function commit() : void
+    final public function commit() : bool
     {
-        $status = $this->storage->save();
-
-        $this->logger->info( '{method} {status}', ['method' => __METHOD__, 'status' => $status] );
+        return $this->storage->save();
     }
 
     /**
