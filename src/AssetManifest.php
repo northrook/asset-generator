@@ -13,9 +13,13 @@ use Psr\Log\LoggerInterface;
 use Support\PhpStormMeta;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+/**
+ * @noinspection PhpClassCanBeReadonlyInspection lazy-load using ghost
+ */
 #[Autodiscover(
-    lazy   : true,   // lazy-load using ghost
-    public : false,  // private
+    lazy     : true, // lazy-load using ghost
+    public   : false,
+    autowire : true,
 )]
 class AssetManifest implements AssetManifestInterface
 {
@@ -23,8 +27,8 @@ class AssetManifest implements AssetManifestInterface
 
     public function __construct(
         #[Autowire( param : 'path.asset_manifest' )] //
-        string                    $storagePath,
-        protected LoggerInterface $logger,
+        string                             $storagePath,
+        protected readonly LoggerInterface $logger,
     ) {
         $this->storage = new LocalStorage(
             $storagePath,

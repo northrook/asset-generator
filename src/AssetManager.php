@@ -25,11 +25,12 @@ use Symfony\Contracts\Cache\CacheInterface;
  * - Locator
  * - Factory
  *
- * @noinspection PhpClassCanBeReadonlyInspection
+ * @noinspection PhpClassCanBeReadonlyInspection lazy-load using ghost
  */
 #[Autodiscover(
-    lazy   : true,   // lazy-load using ghost
-    public : false,  // private
+    lazy     : true,
+    public   : false,
+    autowire : true,
 )]
 class AssetManager implements AssetManagerInterface
 {
