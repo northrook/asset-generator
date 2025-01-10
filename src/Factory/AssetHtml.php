@@ -34,7 +34,7 @@ final readonly class AssetHtml extends DataObject implements AssetHtmlInterface
      */
     public function __toString() : string
     {
-        return $this->name;
+        return $this->html;
     }
 
     /**

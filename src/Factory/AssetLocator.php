@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Core\Assets\Factory;
 
 use Core\Assets\{AssetManifest, Factory\Compiler\AssetReference};
@@ -332,13 +334,13 @@ final class AssetLocator
 
         $normalize = \str_replace( ['/', '\\'], DIRECTORY_SEPARATOR, $from );
 
+        // Remove potential .extension
+        $normalize = \strrchr( $normalize, '.', true ) ?: $normalize;
+
         // If this is a relative path
         if ( DIRECTORY_SEPARATOR === $normalize[0] ) {
             // Remove leading separator
-            $normalize = \ltrim( $normalize, DIRECTORY_SEPARATOR );
-
-            // Remove potential .extension
-            $path = \strrchr( $normalize, '.', true ) ?: $normalize;
+            $path = \ltrim( $normalize, DIRECTORY_SEPARATOR );
 
             // If the asset directory matches the $assetType, trim it to improve consistency
             if ( \str_starts_with( $path, $assetType ) && \str_contains( $path, DIRECTORY_SEPARATOR ) ) {

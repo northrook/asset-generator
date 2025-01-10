@@ -7,6 +7,7 @@ namespace Core\Assets\Factory\Compiler;
 use Core\Assets\Factory\Asset\Type;
 use Stringable;
 use InvalidArgumentException;
+use const PATHINFO_EXTENSION;
 use Support\{FileInfo, Normalize, Str};
 
 /**
@@ -149,5 +150,74 @@ final class AssetReference implements Stringable
             'publicUrl' => $this->publicUrl,
             'sources'   => $this->sources,
         ];
+    }
+
+    public static function generateName(
+        string|SplFileInfo $from,
+        ?Type              $type = null,
+    ) : string {
+        $path = \str_replace( ['/', '\\'], DIRECTORY_SEPARATOR, (string) $from );
+
+        // Assign Type
+        if ( ! $type ) {
+            if ( ! $extension = \pathinfo( $path, PATHINFO_EXTENSION ) ?: null ) {
+                $message = "Could not determine asset type for {$from}.";
+                $message .= ' No extension or Type provided.';
+                throw new InvalidArgumentException( $message );
+            }
+            $type = Type::from( $extension );
+        }
+
+        $assetType = \strtolower( $type->name );
+
+        // dump()
+
+        // If the asset directory matches the $assetType, trim it to improve consistency
+        // if ( \str_starts_with( $path, $assetType ) && \str_contains( $path, DIRECTORY_SEPARATOR ) ) {
+        //     $path = \substr( $path, \strpos( $path, DIRECTORY_SEPARATOR ) + 1 );
+        // }
+
+        // Treat each subsequent directory as a deliminator
+        // $from = \str_replace( DIRECTORY_SEPARATOR, '.', $path );
+
+        // Remove potential .extension
+        $path              = \strrchr( $path, '.', true ) ?: $path;
+        $assetString       = DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR;
+        $hasAssetDirectory = \strrpos( $path, $assetString );
+
+        if ( $hasAssetDirectory ) {
+            $path = \substr( $path, $hasAssetDirectory + \strlen( $assetString ) );
+        }
+        else {
+            $path = \strrchr( $path, DIRECTORY_SEPARATOR ) ?: $path;
+        }
+
+        // Remove leading separator
+        $path = \ltrim( $path, DIRECTORY_SEPARATOR );
+
+        // If the asset directory matches the $assetType, trim it to improve consistency
+        if ( \str_starts_with( $path, $assetType ) && \str_contains( $path, DIRECTORY_SEPARATOR ) ) {
+            $path = \substr( $path, \strpos( $path, DIRECTORY_SEPARATOR ) + 1 );
+        }
+
+        $path = \strchr( $path, '.', true ) ?: $path;
+
+        $path = \str_replace( DIRECTORY_SEPARATOR, '.', $path );
+
+        // Prepend the type
+        $name = "{$assetType}.{$path}";
+
+        // dump(
+        //         $name,
+        //         // $assetType,
+        //         // $segment,
+        //         // $hasAssetDirectory,
+        //         $path,
+        //  strs( $path, DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR ),
+        //  $extension,
+        //  get_defined_vars(),
+        // );
+
+        return (string) \preg_replace( '#[ _]+#', '-', $name );
     }
 }
