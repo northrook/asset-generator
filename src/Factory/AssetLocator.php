@@ -260,7 +260,7 @@ final class AssetLocator
 
         $finder = new Finder();
 
-        $finder->files()->in( $directory );
+        $finder->files()->in( (string) $directory );
 
         if ( $finder->hasResults() ) {
             foreach ( $finder as $splFileInfo ) {
@@ -371,10 +371,10 @@ final class AssetLocator
      *
      * @return string
      */
-    protected function relativePublicUrl( string|FileInfo $path, ?string $ext = null ) : string
+    protected function relativePublicUrl( string|SplFileInfo $path, ?string $ext = null ) : string
     {
         if ( \is_string( $path ) ) {
-            $path = new FileInfo( $path );
+            $path = new SplFileInfo( $path );
         }
         $ext ??= $path->getExtension();
         $relativePath = $this->pathfinder->get( $path, 'dir.assets' );
